@@ -40,9 +40,16 @@ jobs:
         # yapilandirma asamasinda dusuyor. Hatanin kendi onerdigi cozum:
         # "Install it with pip instead".
         run: |
-          python3 -m pip install --upgrade --break-system-packages meson ninja
-          meson --version
-          ninja --version
+          # CMake de sabitleniyor. packages/cmake-0001-ExternalProject-changes.patch
+          # CMake 3.26 donemine yazilmis (baglam satir 1297) ve bugunun
+          # CMake'inde ExternalProject.cmake kaydi: yama "offset 17 lines" ile
+          # tutuyor ama uretilen gitclone betigi bozuluyor ve LLVM indirme
+          # adimi "math cannot parse the expression: 1 + " ile dusuyor.
+          # 3.28 tarifin en son calistigi doneme denk geliyor.
+          python3 -m pip install --upgrade --break-system-packages             "meson" "ninja" "cmake==3.28.*"
+          echo "cmake  : $(command -v cmake)  $(cmake --version | head -1)"
+          echo "meson  : $(meson --version)"
+          echo "ninja  : $(ninja --version)"
 
       - name: Loading clang root
         id: clang_root_cache
