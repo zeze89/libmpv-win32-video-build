@@ -5,7 +5,16 @@ ExternalProject_Add(llvm
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG release/17.x
+    # SURUM SABITLENDI (Nightmare TV, 2026-08-22).
+    #
+    # Burasi `release/17.x` yani bir DAL idi, etiket degil. Tarif 2024'te
+    # arsivlendi ama o dal ilerlemeye devam etti ve bugun libunwind
+    # derlenmiyor:
+    #   llvm/libunwind/src/Unwind-seh.cpp:140: error: cannot initialize
+    #   return object
+    # llvmorg-17.0.6 o dalin SON yayinlanmis surumu (2023-11), yani tarifin
+    # yazildigi donemin karsiligi.
+    GIT_TAG llvmorg-17.0.6
     LIST_SEPARATOR ,
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/llvm -B<BINARY_DIR>
         -G Ninja
