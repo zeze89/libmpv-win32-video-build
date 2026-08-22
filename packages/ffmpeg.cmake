@@ -275,6 +275,15 @@ ExternalProject_Add(ffmpeg
         --enable-muxer=spdif
         --enable-muxer=mpegts
         --enable-muxer=matroska
+        # Ses filtreleri: iki ayar bunlar olmadan olu kaliyor.
+        #  - "Akilli ses > Gece" af=lavfi=[dynaudnorm=...] yaziyor, mpv
+        #    "No such filter: 'dynaudnorm'" deyip grafi kuramiyor.
+        #  - "Kanal Sesi Dengeleyici" af=loudnorm=... yaziyor, mpv
+        #    "Option af: loudnorm doesn't exist" ile reddediyor.
+        # Ikisi de LGPL 2.1+ (af_dynaudnorm.c ve af_loudnorm.c basliklari
+        # kontrol edildi); loudnorm ffmpeg'in kendi ebur128'ini kullaniyor.
+        --enable-filter=dynaudnorm
+        --enable-filter=loudnorm
 
         --enable-protocol=async
         --enable-protocol=cache
