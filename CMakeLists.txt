@@ -20,9 +20,16 @@ string(REGEX MATCH "^[^-]+" TARGET_CPU ${TARGET_ARCH})
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE HOST_ARCH)
 string(REGEX MATCH "^[^-]+" HOST_CPU ${HOST_ARCH})
 
-execute_process(COMMAND meson --version OUTPUT_VARIABLE MESON_VERSION)
-if(NOT MESON_VERSION GREATER_EQUAL 1.3)
-    message(FATAL_ERROR "Meson 1.3.0 or greater is required. Install it with pip instead.")
+# Nightmare TV, 2026-08-22: this gate used GREATER_EQUAL, which is CMake's
+# NUMERIC comparison. It reads "1.12.0" as 1.12 and 1.12 < 1.3 as decimals,
+# so every meson from 1.10 onwards is rejected as "too old". The recipe was
+# written when meson was in the 1.3 to 1.9 range, so it only started failing
+# once meson reached 1.10. VERSION_GREATER_EQUAL compares version components.
+# Also strip the trailing newline the command leaves behind.
+execute_process(COMMAND meson --version OUTPUT_VARIABLE MESON_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT MESON_VERSION VERSION_GREATER_EQUAL 1.3)
+    message(FATAL_ERROR "Meson 1.3.0 or greater is required, found '${MESON_VERSION}'. Install it with pip instead.")
 endif()
 
 if(TARGET_CPU STREQUAL "x86_64")
