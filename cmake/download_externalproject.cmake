@@ -5,7 +5,21 @@ execute_process(
 
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/modules.tar.gz")
     execute_process(
-        COMMAND curl -sL https://gitlab.kitware.com/cmake/cmake/-/archive/release/cmake-release.tar.gz?path=Modules/ExternalProject -o modules.tar.gz
+        # SURUM SABITLENDI (Nightmare TV, 2026-08-22).
+        #
+        # Bu satir sablonlari CMake'in `release` DALINDAN, yani bugunun en
+        # guncel surumunden cekiyordu; asagidaki satir ise
+        # ExternalProject.cmake'i v3.26.4'e SABITLIYOR. Iki yari farkli
+        # surumden geliyordu ve 2024'te uyumlulardi, bugun degil.
+        #
+        # Bugunun sablonunda gitclone.cmake.in:36 soyle:
+        #     math(EXPR max_tries "1 + @git_clone_retries@")
+        # `git_clone_retries` degiskenini BUGUNUN ExternalProject.cmake'i
+        # tanimliyor. v3.26.4 onu bilmedigi icin yerine bos koyuluyor ve
+        # uretilen betik `math(EXPR max_tries "1 + ")` oluyor:
+        #     math cannot parse the expression: "1 + "
+        # LLVM indirme adimi tam burada dusuyordu.
+        COMMAND curl -sL https://gitlab.kitware.com/cmake/cmake/-/archive/v3.26.4/cmake-v3.26.4.tar.gz?path=Modules/ExternalProject -o modules.tar.gz
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
     execute_process(
