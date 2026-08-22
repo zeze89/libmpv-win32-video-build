@@ -160,24 +160,32 @@ jobs:
           retention-days: 1
 
       - name: Saving clang root
+
+        if: always()  # derleme dusse de yapilani sakla
         uses: actions/cache/save@main
         with:
           path: clang_root
           key: ${{ secrets.CACHE_VERSION }}-clang_root-${{ github.run_id }}
 
       - name: Saving x86_64 toolchain
+
+        if: always()  # derleme dusse de yapilani sakla
         uses: actions/cache/save@main
         with:
           path: build_x86_64
           key: ${{ secrets.CACHE_VERSION }}-clang-x86_64_toolchain-${{ github.run_id }}
 
       - name: Saving x86_64_v3 toolchain
+
+        if: always()  # derleme dusse de yapilani sakla
         uses: actions/cache/save@main
         with:
           path: build_x86_64_v3
           key: ${{ secrets.CACHE_VERSION }}-clang-x86_64_v3_toolchain-${{ github.run_id }}
 
       - name: Saving i686 toolchain
+
+        if: always()  # derleme dusse de yapilani sakla
         uses: actions/cache/save@main
         with:
           path: build_i686

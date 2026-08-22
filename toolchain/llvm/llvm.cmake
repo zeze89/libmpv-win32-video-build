@@ -15,6 +15,15 @@ ExternalProject_Add(llvm
     # llvmorg-17.0.6 o dalin SON yayinlanmis surumu (2023-11), yani tarifin
     # yazildigi donemin karsiligi.
     GIT_TAG llvmorg-17.0.6
+    # GIT_RESET SART (Nightmare TV, 2026-08-22). Etikete sabitlemek git'i
+    # AYRIK HEAD'e sokuyor. `cmake/custom_steps.cmake` icindeki
+    # reset_head.sh, GIT_RESET verilmemisse `@{u}` yani upstream'e reset
+    # atiyor ve ayrik HEAD'de upstream YOKTUR:
+    #   fatal: HEAD does not point to a branch
+    # Bu, LLVM 1 saat 26 dakikada basariyla derlendikten SONRA, temizlik
+    # adiminda butun kosuyu dusuruyordu. Tarifin kendi yamasi GIT_RESET'i
+    # tam bu durum icin eklemis.
+    GIT_RESET llvmorg-17.0.6
     LIST_SEPARATOR ,
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/llvm -B<BINARY_DIR>
         -G Ninja
