@@ -65,6 +65,9 @@ jobs:
           git config --global --add safe.directory $PWD
 
       - uses: actions/checkout@main
+        with:
+          ref: master
+
       - name: Installing build prerequisites
         # 2026-08-22, Nightmare TV: tarif 2024'te arsivlendi ve o zaman
         # ubuntu-latest'te uygun meson vardi. Bugun kosucudaki surum
@@ -75,8 +78,6 @@ jobs:
           python3 -m pip install --upgrade --break-system-packages meson ninja
           meson --version
           ninja --version
-        with:
-          ref: master
 
       - name: Loading clang sysroot cache
         uses: actions/cache/restore@main
