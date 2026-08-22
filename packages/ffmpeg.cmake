@@ -1,23 +1,14 @@
 ExternalProject_Add(ffmpeg
     DEPENDS
         amf-headers
-        avisynth-headers
         nvcodec-headers
         bzip2
+        gmp
         lame
-        lcms2
-        openssl
-        libssh
-        libsrt
         libass
-        libbluray
-        libdvdnav
-        libdvdread
-        libmodplug
         libpng
         libsoxr
         libbs2b
-        libvpx
         libwebp
         libzimg
         libmysofa
@@ -26,93 +17,295 @@ ExternalProject_Add(ffmpeg
         opus
         speex
         vorbis
-        x264
-        ${ffmpeg_x265}
-        libxml2
         libvpl
-        libopenmpt
-        libjxl
+        libxml2
         libplacebo
-        libzvbi
-        libaribcaption
-        aom
-        svtav1
+        shaderc
         dav1d
-        vapoursynth
-        ${ffmpeg_uavs3d}
-        ${ffmpeg_davs2}
-        rubberband
-        libva
-        openal-soft
+        mbedtls
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     SOURCE_DIR ${SOURCE_LOCATION}
-    GIT_CLONE_FLAGS "--sparse --filter=tree:0"
-    GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !tests/ref/fate"
+    GIT_TAG 705286a8a7a8f9118465b2bd83f99a6f066dcbbc  # win-v4: FFmpeg master 705286a (upstream tarifin yamalari master icin)
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} CONF=1 <SOURCE_DIR>/configure
         --cross-prefix=${TARGET_ARCH}-
         --prefix=${MINGW_INSTALL_PREFIX}
         --arch=${TARGET_CPU}
         --target-os=mingw32
+        --target-exec=wine
         --pkg-config-flags=--static
         --enable-cross-compile
-        --enable-runtime-cpudetect
-        --enable-gpl
+
+        --disable-gpl
+        --disable-nonfree
         --enable-version3
-        --enable-avisynth
-        --enable-vapoursynth
-        --enable-libass
-        --enable-libbluray
-        --enable-libdvdnav
-        --enable-libdvdread
-        --enable-libfreetype
-        --enable-libfribidi
-        --enable-libfontconfig
-        --enable-libharfbuzz
-        --enable-libmodplug
-        --enable-libopenmpt
-        --enable-libmp3lame
-        --enable-lcms2
-        --enable-libopus
-        --enable-libsoxr
-        --enable-libspeex
-        --enable-libvorbis
-        --enable-libbs2b
-        --enable-librubberband
-        --enable-libvpx
-        --enable-libwebp
-        --enable-libx264
-        --enable-libx265
-        --enable-libaom
-        --enable-libsvtav1
-        --enable-libdav1d
-        ${ffmpeg_davs2_cmd}
-        ${ffmpeg_uavs3d_cmd}
-        --enable-libzimg
-        --enable-openssl
-        --enable-libxml2
-        --enable-libmysofa
-        --enable-libssh
-        --enable-libsrt
-        --enable-libvpl
-        --enable-libjxl
-        --enable-libplacebo
-        --enable-libzvbi
-        --enable-libaribcaption
-        --enable-cuda-llvm
-        --enable-cuvid
+        --enable-static
+        --disable-shared
+        --disable-vulkan
+        --disable-iconv
+        --enable-stripping
+
+        --disable-muxers
+        --disable-decoders
+        --disable-encoders
+        --disable-demuxers
+        --disable-parsers
+        --disable-protocols
+        --disable-filters
+        --disable-doc
+        --disable-postproc
+        --disable-programs
+        --disable-gray
+        --disable-swscale-alpha
+
+        --enable-bsfs
+
+        --enable-amf
+        --enable-cuda
         --enable-nvdec
         --enable-nvenc
-        --enable-amf
-        --enable-openal
-        --enable-opengl
-        --disable-doc
-        --disable-ffplay
-        --disable-ffprobe
-        --enable-vaapi
+        --enable-cuvid
+        --enable-dxva2
+        --enable-libmfx
+        --enable-d3d11va
+        --enable-ffnvcodec
+
+        --disable-vaapi
         --disable-vdpau
+        --disable-bzlib
+        --disable-libmfx
+        --disable-libuavs3d
+        --disable-linux-perf
         --disable-videotoolbox
-        --disable-decoder=libaom_av1
+        --disable-audiotoolbox
+
+        --enable-small
+        --enable-hwaccels
+        --enable-optimizations
+        --enable-runtime-cpudetect
+
+        --enable-mbedtls
+
+        --disable-libjxl
+        --enable-libdav1d
+        --enable-libplacebo
+
+        --enable-libvpl
+        --enable-libbs2b
+        --enable-libwebp
+        --enable-libzimg
+        --enable-libxml2
+        --enable-libsoxr
+        --enable-libspeex
+        --enable-libmysofa
+        --enable-libshaderc
+        --enable-libfribidi
+        --enable-libfreetype
+
+        --enable-avutil
+        --enable-avcodec
+        --enable-avfilter
+        --enable-avformat
+        --enable-avdevice
+        --enable-swscale
+        --enable-swresample
+
+        --enable-decoder=flv
+        --enable-decoder=h263
+        --enable-decoder=h263i
+        --enable-decoder=h263p
+        --enable-decoder=h264*
+        --enable-decoder=mpeg1video
+        --enable-decoder=mpeg2*
+        --enable-decoder=mpeg4*
+        --enable-decoder=vp6
+        --enable-decoder=vp6a
+        --enable-decoder=vp6f
+        --enable-decoder=vp8*
+        --enable-decoder=vp9*
+        --enable-decoder=hevc*
+        --enable-decoder=av1*
+        --enable-decoder=libdav1d
+        --enable-decoder=theora
+        --enable-decoder=msmpeg*
+        --enable-decoder=mjpeg*
+        --enable-decoder=wmv*
+
+        --enable-decoder=aac*
+        --enable-decoder=ac3
+        --enable-decoder=alac
+        --enable-decoder=als
+        --enable-decoder=ape
+        --enable-decoder=atrac*
+        --enable-decoder=eac3
+        --enable-decoder=flac
+        --enable-decoder=gsm*
+        --enable-decoder=mp1*
+        --enable-decoder=mp2*
+        --enable-decoder=mp3*
+        --enable-decoder=mpc*
+        --enable-decoder=opus
+        --enable-decoder=ra*
+        --enable-decoder=ralf
+        --enable-decoder=shorten
+        --enable-decoder=tak
+        --enable-decoder=tta
+        --enable-decoder=vorbis
+        --enable-decoder=wavpack
+        --enable-decoder=wma*
+        --enable-decoder=pcm*
+        --enable-decoder=dsd*
+        --enable-decoder=dca
+
+        --enable-decoder=ssa
+        --enable-decoder=ass
+        --enable-decoder=dvbsub
+        --enable-decoder=dvdsub
+        --enable-decoder=srt
+        --enable-decoder=stl
+        --enable-decoder=subrip
+        --enable-decoder=subviewer
+        --enable-decoder=subviewer1
+        --enable-decoder=text
+        --enable-decoder=vplayer
+        --enable-decoder=webvtt
+        --enable-decoder=movtext
+
+        --enable-decoder=mjpeg
+        --enable-decoder=ljpeg
+        --enable-decoder=jpegls
+        --enable-decoder=jpeg2000
+        --enable-decoder=png
+        --enable-decoder=gif
+        --enable-decoder=bmp
+        --enable-decoder=tiff
+        --enable-decoder=webp
+        --enable-decoder=jpegls
+
+        --enable-demuxer=concat
+        --enable-demuxer=data
+        --enable-demuxer=flv
+        --enable-demuxer=hls
+        --enable-demuxer=latm
+        --enable-demuxer=live_flv
+        --enable-demuxer=loas
+        --enable-demuxer=m4v
+        --enable-demuxer=mov
+        --enable-demuxer=mpegps
+        --enable-demuxer=mpegts
+        --enable-demuxer=mpegvideo
+        --enable-demuxer=hevc
+        --enable-demuxer=rtsp
+        --enable-demuxer=mpeg4
+        --enable-demuxer=mjpeg*
+        --enable-demuxer=avi
+        --enable-demuxer=av1
+        --enable-demuxer=matroska
+        --enable-demuxer=dash
+        --enable-demuxer=webm_dash_manifest
+
+        --enable-demuxer=aac
+        --enable-demuxer=ac3
+        --enable-demuxer=aiff
+        --enable-demuxer=ape
+        --enable-demuxer=asf
+        --enable-demuxer=au
+        --enable-demuxer=avi
+        --enable-demuxer=flac
+        --enable-demuxer=flv
+        --enable-demuxer=matroska
+        --enable-demuxer=mov
+        --enable-demuxer=m4v
+        --enable-demuxer=mp3
+        --enable-demuxer=mpc*
+        --enable-demuxer=ogg
+        --enable-demuxer=pcm*
+        --enable-demuxer=rm
+        --enable-demuxer=shorten
+        --enable-demuxer=tak
+        --enable-demuxer=tta
+        --enable-demuxer=wav
+        --enable-demuxer=wv
+        --enable-demuxer=xwma
+        --enable-demuxer=dsf
+        --enable-demuxer=truehd
+        --enable-demuxer=dts
+        --enable-demuxer=dtshd
+
+        --enable-demuxer=ass
+        --enable-demuxer=srt
+        --enable-demuxer=stl
+        --enable-demuxer=webvtt
+        --enable-demuxer=subviewer
+        --enable-demuxer=subviewer1
+        --enable-demuxer=vplayer
+
+        --enable-parser=h263
+        --enable-parser=h264
+        --enable-parser=hevc
+        --enable-parser=mpeg4
+        --enable-parser=mpeg4video
+        --enable-parser=mpegvideo
+
+        --enable-parser=aac*
+        --enable-parser=ac3
+        --enable-parser=cook
+        --enable-parser=flac
+        --enable-parser=gsm
+        --enable-parser=mpegaudio
+        --enable-parser=tak
+        --enable-parser=vorbis
+        --enable-parser=dca
+
+        --enable-filter=overlay
+        --enable-filter=equalizer
+        # --- Nightmare TV eklemeleri (2026-08-22) ---
+        # Ayristirici: TR canli kanallari 1080i25 geliyor ve stok derlemede
+        # HICBIR ayristirici yok, mpv "Creating filter 'yadif' failed" deyip
+        # ham taramali kareyi basiyordu. Olculdu: tam libmpv ile cikis
+        # 25 -> 50 fps, tarak disi kayboldu.
+        # Ikisi de LGPL 2.1+, yani --disable-gpl / -Dgpl=false duruşu bozulmaz.
+        --enable-filter=yadif
+        --enable-filter=bwdif
+        # Muxer: stok derleme --disable-muxers ve tek bir --enable-muxer= yok.
+        # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
+        # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
+        # `stream-record` "Output format not found" deyip dosya uretmiyor.
+        --enable-muxer=spdif
+        --enable-muxer=mpegts
+        --enable-muxer=matroska
+
+        --enable-protocol=async
+        --enable-protocol=cache
+        --enable-protocol=crypto
+        --enable-protocol=data
+        --enable-protocol=ffrtmphttp
+        --enable-protocol=file
+        --enable-protocol=ftp
+        --enable-protocol=hls
+        --enable-protocol=http
+        --enable-protocol=httpproxy
+        --enable-protocol=https
+        --enable-protocol=pipe
+        --enable-protocol=rtmp
+        --enable-protocol=rtmps
+        --enable-protocol=rtmpt
+        --enable-protocol=rtmpts
+        --enable-protocol=rtp
+        --enable-protocol=subfile
+        --enable-protocol=tcp
+        --enable-protocol=tls
+        --enable-protocol=srt
+
+        --enable-encoder=mjpeg
+        --enable-encoder=ljpeg
+        --enable-encoder=jpegls
+        --enable-encoder=jpeg2000
+        --enable-encoder=png
+        --enable-encoder=jpegls
+
+        --enable-network
+
         ${ffmpeg_lto}
         --extra-cflags='-Wno-error=int-conversion'
         "--extra-libs='${ffmpeg_extra_libs}'" # -lstdc++ / -lc++ needs by libjxl and shaderc

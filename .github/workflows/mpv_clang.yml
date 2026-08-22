@@ -34,7 +34,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bit: [i686, x86_64, x86_64_v3, aarch64]
+        # Nightmare TV: ilk dogrulama kosusu icin yalniz x86_64.
+        # Gerekirse [i686, x86_64, x86_64_v3] olarak geri acilir.
+        bit: [x86_64]
     env:
       BIT: ${{ matrix.bit }}
     container:
@@ -51,9 +53,6 @@ jobs:
           elif [[ $BIT == "x86_64_v3" ]]; then
             echo "arch=x86_64" >> $GITHUB_ENV
             echo "x86_64_level=-v3" >> $GITHUB_ENV
-            echo "x86_64_v3_ARCH=-DGCC_ARCH=x86-64-v3" >> $GITHUB_ENV
-          elif [[ $BIT == "aarch64" ]]; then
-            echo "arch=aarch64" >> $GITHUB_ENV
           fi
 
       - name: Setup git config
@@ -102,6 +101,7 @@ jobs:
 
       - name: Configuring CMake & Downloading source
         run: |
+          if [[ $BIT == x86_64_v3 ]]; then echo "x86_64_v3_ARCH=-DGCC_ARCH=x86-64-v3" >> $GITHUB_ENV; fi
           cmake -DTARGET_ARCH=${{ env.arch }}-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang ${{ env.x86_64_v3_ARCH }} -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DMINGW_INSTALL_PREFIX=$PWD/build_$BIT/$BIT-w64-mingw32 -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/clang_root/install_rustup -DENABLE_CCACHE=ON -DCLANG_PACKAGES_LTO=ON -G Ninja --fresh -B build_$BIT -S $PWD
           ninja -C build_$BIT download || true
 
@@ -111,6 +111,7 @@ jobs:
           MPV_TARBALL: ${{ github.event.inputs.mpv_tarball }}
         run: |
           ninja -C build_$BIT update
+          ninja -C build_$BIT llvm-copy-builtin
           $MPV_TARBALL && ninja -C build_$BIT mpv-release || ninja -C build_$BIT mpv
           $MPV_TARBALL && echo "mpv_ver=$(cat build_$BIT/packages/mpv-release-prefix/VERSION)" >> $GITHUB_OUTPUT || echo "mpv_ver=UNKNOWN" >> $GITHUB_OUTPUT
 
@@ -118,6 +119,7 @@ jobs:
         run: |
           mkdir -p release_$BIT
           ninja -C build_$BIT mpv-packaging; mv build_$BIT/mpv*.7z release_$BIT
+          if [[ $BIT == x86_64_v3 ]]; then for dir in release_$BIT/mpv-*; do name=$(basename $dir); mv $dir $(dirname $dir)/${name/x86_64/x86_64-v3}; done; fi
 
       - name: Copying ffmpeg
         run: |
@@ -201,7 +203,6 @@ jobs:
       release_i686_key: ${{ secrets.CACHE_VERSION }}-release_i686-${{ github.run_id }}
       release_x86_64_key: ${{ secrets.CACHE_VERSION }}-release_x86_64-${{ github.run_id }}
       release_x86_64_v3_key: ${{ secrets.CACHE_VERSION }}-release_x86_64_v3-${{ github.run_id }}
-      release_aarch64_key: ${{ secrets.CACHE_VERSION }}-release_aarch64-${{ github.run_id }}
     container:
       image: docker://alpine:latest
 
@@ -236,16 +237,10 @@ jobs:
           path: release_x86_64_v3
           key: ${{ env.release_x86_64_v3_key }}
 
-      - name: Loading release_aarch64 cache
-        uses: actions/cache/restore@main
-        with:
-          path: release_aarch64
-          key: ${{ env.release_aarch64_key }}
-
       - name: Moving archives
         run: |
           mkdir -p release
-          mv release_i686/* release_x86_64/* release_x86_64_v3/* release_aarch64/* release
+          mv release_i686/* release_x86_64/* release_x86_64_v3/* release
           du -ah release/*
 
       - name: Uploading packages to Sourceforge
@@ -314,7 +309,6 @@ jobs:
           curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -o /dev/null -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/caches?key=$release_i686_key
           curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -o /dev/null -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/caches?key=$release_x86_64_key
           curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -o /dev/null -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/caches?key=$release_x86_64_v3_key
-          curl -u shinchiro:$GH_TOKEN $CURL_RETRIES -s -o /dev/null -X DELETE -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/actions/caches?key=$release_aarch64_key
 
   call_workflow:
     name: Run mpv_gcc
