@@ -34,7 +34,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bit: [i686, x86_64, x86_64_v3]
+        # Nightmare TV: ilk dogrulama kosusu icin yalniz x86_64.
+        # Gerekirse [i686, x86_64, x86_64_v3] olarak geri acilir.
+        bit: [x86_64]
     env:
       BIT: ${{ matrix.bit }}
     container:

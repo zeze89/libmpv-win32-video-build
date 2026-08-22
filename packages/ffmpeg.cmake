@@ -260,6 +260,21 @@ ExternalProject_Add(ffmpeg
 
         --enable-filter=overlay
         --enable-filter=equalizer
+        # --- Nightmare TV eklemeleri (2026-08-22) ---
+        # Ayristirici: TR canli kanallari 1080i25 geliyor ve stok derlemede
+        # HICBIR ayristirici yok, mpv "Creating filter 'yadif' failed" deyip
+        # ham taramali kareyi basiyordu. Olculdu: tam libmpv ile cikis
+        # 25 -> 50 fps, tarak disi kayboldu.
+        # Ikisi de LGPL 2.1+, yani --disable-gpl / -Dgpl=false duruşu bozulmaz.
+        --enable-filter=yadif
+        --enable-filter=bwdif
+        # Muxer: stok derleme --disable-muxers ve tek bir --enable-muxer= yok.
+        # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
+        # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
+        # `stream-record` "Output format not found" deyip dosya uretmiyor.
+        --enable-muxer=spdif
+        --enable-muxer=mpegts
+        --enable-muxer=matroska
 
         --enable-protocol=async
         --enable-protocol=cache

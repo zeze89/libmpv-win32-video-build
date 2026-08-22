@@ -14,6 +14,14 @@ ExternalProject_Add(mpv
         libplacebo
         spirv-cross
     GIT_REPOSITORY https://github.com/mpv-player/mpv.git
+    # SURUM SABITLENDI (Nightmare TV, 2026-08-22).
+    # Stok tarifte GIT_TAG yok, yani HEAD cekiliyor ve bugun mpv 0.41
+    # derlenir. Nightmare deposunda mpv 0.36'ya bagli OLCULMUS bir duzine
+    # davranis var (ADVANCED_CONTROL kilidi, display-fps=0, report_swap
+    # sayaci, paylasilan doku yarisi). Surum atlamak onlarin hepsini
+    # gecersiz kilar. Bu commit uretimdeki libmpv-2.dll ile BIREBIR AYNI:
+    # v0.36.0-403-g652a1dd907, dogrulandi.
+    GIT_TAG 652a1dd90711839acdccc08004056d25514ef2d8
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
