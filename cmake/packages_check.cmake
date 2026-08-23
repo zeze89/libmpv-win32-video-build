@@ -19,8 +19,11 @@ elseif(COMPILER_TOOLCHAIN STREQUAL "clang")
     set(mpv_lto_mode "-Db_lto_mode=thin")
     set(mpv_copy_debug COMMAND ${CMAKE_COMMAND} -E copy <BINARY_DIR>/mpv.pdb ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug/mpv.pdb)
     if(CLANG_PACKAGES_LTO)
-        set(cargo_lto_rustflags "CARGO_PROFILE_RELEASE_LTO=thin
-                                 RUSTFLAGS='-C linker-plugin-lto -C embed-bitcode -C lto=thin'")
+        # Rust LTO bitcode KAPALI (2026-08-23): konteynerin rustc 1.98 LLVM 22
+        # bitcode gomuyor, sabitli lld 17 okuyamiyor ("Unknown attribute kind
+        # (102)", 32646878919) ve libdovi tasiyan her link testi dusuyordu.
+        # Duz makine kodu rlib icin bayraklar bos.
+        set(cargo_lto_rustflags "")
         # Sabitli 2023 ffmpeg configure "--enable-lto=thin" bicimini tanimiyor
         # ("Unknown option", 32645474194); =arg destegi ffmpeg'e sonra geldi.
         # LTO burada islevsel gereklilik degil, bos birakildi.
