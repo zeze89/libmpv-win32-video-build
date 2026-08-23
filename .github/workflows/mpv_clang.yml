@@ -29,7 +29,7 @@ on:
 jobs:
   build_mpv:
     name: Building mpv
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
     if: ${{ github.event.workflow_run.conclusion != 'failure' }}
     strategy:
       fail-fast: false
@@ -213,7 +213,7 @@ jobs:
 
   release:
     name: Upload releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
     needs: build_mpv
     env:
       GH_TOKEN: ${{ github.token }}
@@ -330,7 +330,7 @@ jobs:
 
   call_workflow:
     name: Run mpv_gcc
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
     needs: build_mpv
     env:
       GH_TOKEN: ${{ github.token }}
@@ -352,7 +352,7 @@ jobs:
 
   gist:
     name: Gist
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
     needs: build_mpv
     if: ${{ always() }}
     env:
