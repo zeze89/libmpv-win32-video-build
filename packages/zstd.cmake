@@ -1,3 +1,6 @@
+# Upstream tarifi birebir (2026-08-23): zstd dev-2026, cmake yolunda
+# 'check_compiler_flag: CXX: needs to be enabled' ile dusuyordu
+# (32642336365); upstream ayni sebeple meson'a gecmis ve bugun yesil.
 ExternalProject_Add(zstd
     GIT_REPOSITORY https://github.com/facebook/zstd.git
     SOURCE_DIR ${SOURCE_LOCATION}
@@ -5,25 +8,23 @@ ExternalProject_Add(zstd
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     GIT_TAG dev
-    CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/build/cmake -B<BINARY_DIR>
-        -G Ninja
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}
-        -DCMAKE_INSTALL_PREFIX=${MINGW_INSTALL_PREFIX}
-        -DCMAKE_FIND_ROOT_PATH=${MINGW_INSTALL_PREFIX}
-        -DBUILD_SHARED_LIBS=OFF
-        -DZSTD_BUILD_CONTRIB=OFF
-        -DZSTD_BUILD_TESTS=OFF
-        -DZSTD_LEGACY_SUPPORT=OFF
-        -DZSTD_BUILD_PROGRAMS=OFF
-        -DZSTD_PROGRAMS_LINK_SHARED=OFF
-        -DZSTD_BUILD_SHARED=OFF
-        -DZSTD_BUILD_STATIC=ON
-        -DZSTD_MULTITHREAD_SUPPORT=ON
+    CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>/build/meson
+        --prefix=${MINGW_INSTALL_PREFIX}
+        --libdir=${MINGW_INSTALL_PREFIX}/lib
+        --cross-file=${MESON_CROSS}
+        --buildtype=release
+        --default-library=static
+        -Dlegacy_level=0
+        -Ddebug_level=0
+        -Dbin_programs=false
+        -Dzlib=disabled
+        -Dlzma=disabled
+        -Dlz4=disabled
     BUILD_COMMAND ${EXEC} ninja -C <BINARY_DIR>
     INSTALL_COMMAND ${EXEC} ninja -C <BINARY_DIR> install
     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
 )
 
 force_rebuild_git(zstd)
+force_meson_configure(zstd)
 cleanup(zstd install)
