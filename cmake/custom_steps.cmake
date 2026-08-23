@@ -20,9 +20,19 @@ function(cleanup _name _last_step)
         else()
             set(remove_cmd "rm -rf <BINARY_DIR>/* && git -C <SOURCE_DIR> clean -df")
         endif()
-        set(COMMAND_FORCE_UPDATE COMMAND bash -c "git -C <SOURCE_DIR> am --abort 2> /dev/null || true"
-                                 COMMAND ${stamp_dir}/reset_head.sh
-                                 COMMAND bash -c "git -C <SOURCE_DIR> restore .")
+        # KAYNAK DIZINI HENUZ KLONLANMAMISSA ATLA (Nightmare TV, 2026-08-22).
+        #
+        # Ucu de `git -C <SOURCE_DIR> ...` calistiriyor. Paket henuz
+        # indirilmemisse orada .git yoktur ve git YUKARI YURUYUP calisma
+        # alaninin kendi deposunu bulur. Iki sonucu var:
+        #  1. ninja bu adimlari paralel kosturdugu icin hepsi ayni
+        #     .git/index.lock dosyasina carpiyor.
+        #  2. Daha kotusu: `git restore .` YANLIS depoda calisir ve
+        #     tarife uyguladigimiz yamalari geri alabilir.
+        # Klonlanmamis paketin sifirlanacak bir seyi zaten yok.
+        set(COMMAND_FORCE_UPDATE COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git -C <SOURCE_DIR> am --abort 2> /dev/null || true"
+                                 COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; exec ${stamp_dir}/reset_head.sh"
+                                 COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git -C <SOURCE_DIR> restore .")
     endif()
 
     # <STAMP_DIR> doesn't resolve into full path, so <LOG_DIR> is used instead since its same folder.
