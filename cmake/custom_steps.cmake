@@ -123,9 +123,14 @@ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_
         EXCLUDE_FROM_MAIN TRUE
         INDEPENDENT TRUE
         WORKING_DIRECTORY <SOURCE_DIR>
-        COMMAND bash -c "git am --abort 2> /dev/null || true"
-        COMMAND bash -c "git fetch --filter=tree:0 --no-recurse-submodules"
-        COMMAND ${stamp_dir}/reset_head.sh
+        # .git yoksa git buradan YUKARI yuruyup depo kokundeki .git dizinini
+        # bulur; 22 paralel adim index.lock uzerinde carpisti (32638665172).
+        # Kaynak bos ama download damgasi gecerliyse damgalar silinir ki ana
+        # derleme paketi yeniden klonlasin (fast_float/libdovi boyle iyilesir).
+        # fetch || true: upstream c24abb677, gecici ag hatasi isi oldurmesin.
+        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git am --abort 2> /dev/null || true"
+        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git fetch --filter=tree:0 --no-recurse-submodules || true"
+        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || { rm -f ${stamp_dir}/${_name}-download ${stamp_dir}/${_name}-gitclone-lastrun.txt; exit 0; }; exec ${stamp_dir}/reset_head.sh"
     )
     ExternalProject_Add_StepTargets(${_name} force-update)
 
