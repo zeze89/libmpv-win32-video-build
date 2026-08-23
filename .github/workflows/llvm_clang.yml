@@ -14,7 +14,7 @@ on:
 jobs:
   build_llvm:
     name: Building LLVM and Clang
-    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
+    runs-on: ubuntu-22.04  # not: derleyici KONTEYNERDEN gelir, bunu degistirmek onu etkilemez
     strategy:
       fail-fast: false
     container:
@@ -247,7 +247,7 @@ jobs:
 
   call_workflow:
     name: Run mpv_clang
-    runs-on: ubuntu-22.04  # GCC 16 eski mingw-w64 kaynagini derlemiyor, bkz. commit notu
+    runs-on: ubuntu-22.04  # not: derleyici KONTEYNERDEN gelir, bunu degistirmek onu etkilemez
     needs: build_llvm
     env:
       GH_TOKEN: ${{ github.token }}
