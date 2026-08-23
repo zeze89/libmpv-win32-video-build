@@ -27,6 +27,10 @@ ExternalProject_Add(shaderc
         -DSPIRV_TOOLS_LIBRARY_TYPE=STATIC
         -DMINGW_COMPILER_PREFIX=${TARGET_ARCH}
         -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS} -std=c++17'
+        # glslang (main) export'u SPIRV-Tools-opt hedefini istiyor; bu bayrak
+        # olmadan configure 'not in any export' hatasiyla dusuyor (32641228012).
+        # Upstream ayni bayragi tam bu sebeple eklemis.
+        -DENABLE_SPIRV_TOOLS_INSTALL=ON
     BUILD_COMMAND ${EXEC} LTO_JOB=1 ninja -C <BINARY_DIR>
     INSTALL_COMMAND ""
     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
