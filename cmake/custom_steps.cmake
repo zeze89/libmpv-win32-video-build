@@ -128,9 +128,13 @@ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_
         # Kaynak bos ama download damgasi gecerliyse damgalar silinir ki ana
         # derleme paketi yeniden klonlasin (fast_float/libdovi boyle iyilesir).
         # fetch || true: upstream c24abb677, gecici ag hatasi isi oldurmesin.
-        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git am --abort 2> /dev/null || true"
-        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git fetch --filter=tree:0 --no-recurse-submodules || true"
-        COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || { rm -f ${stamp_dir}/${_name}-download ${stamp_dir}/${_name}-gitclone-lastrun.txt; exit 0; }; exec ${stamp_dir}/reset_head.sh"
+        # DIKKAT: CMake COMMAND icinde ";" liste ayracidir ve komutu boler
+        # (kosu 32640619766 boyle oldu: acik kalan { soz dizimi hatasi).
+        # Bu yuzden asagidaki uc satir yalniz && ve || kullanir. Calisma
+        # dizini <SOURCE_DIR> oldugu icin .git goreli yazilir.
+        COMMAND bash -c "[ ! -e .git ] || git am --abort 2> /dev/null || true"
+        COMMAND bash -c "[ ! -e .git ] || git fetch --filter=tree:0 --no-recurse-submodules || true"
+        COMMAND bash -c "[ -e .git ] && exec ${stamp_dir}/reset_head.sh || rm -f ${stamp_dir}/${_name}-download ${stamp_dir}/${_name}-gitclone-lastrun.txt"
     )
     ExternalProject_Add_StepTargets(${_name} force-update)
 
