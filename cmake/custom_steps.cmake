@@ -111,6 +111,26 @@ function(force_rebuild_git _name)
         set(reset "@{u}") # eg: origin/master
     endif()
 
+if(NOT "${git_reset}" STREQUAL "")
+# PINLI PAKET VARYANTI (2026-08-23). Ozgun kosul "depolanan HEAD != @{u}"
+# diye bakiyordu; upstream kimildamamissa hic ateslenmiyor ve VAR OLAN bir
+# klona sonradan eklenen GIT_RESET asla uygulanmiyordu (angle-headers boyle
+# tepede kaldi, 32648055554 sondasi kanitladi). Pinli paket icin dogru
+# davranis: HER kosuda hedefe reset; damga silme yalnizca is degistiyse
+# (HEAD tasindi, agac kirliydi = yama geri alindi, ya da yama damgasi yok).
+file(WRITE ${stamp_dir}/reset_head.sh
+"#!/bin/bash
+set -e
+before=$(git -C ${source_dir} rev-parse HEAD)
+dirty=$(git -C ${source_dir} status --porcelain --untracked-files=no)
+git -C ${source_dir} reset --hard ${reset} -q
+after=$(git -C ${source_dir} rev-parse HEAD)
+if [[ \"$before\" != \"$after\" || -n \"$dirty\" || ! -f \"${stamp_dir}/${_name}-patch\" ]]; then
+    find \"${stamp_dir}\" -type f  ! -iname '*.cmake' -size 0c -delete
+    echo \"Removing ${_name} stamp files.\"
+fi
+git -C ${source_dir} rev-parse HEAD > ${stamp_dir}/HEAD")
+else()
 file(WRITE ${stamp_dir}/reset_head.sh
 "#!/bin/bash
 set -e
@@ -127,6 +147,7 @@ if [[ ! -f \"${stamp_dir}/${_name}-patch\"  || \"${stamp_dir}/${_name}-download\
 else
     git -C ${source_dir} reset --hard -q
 fi")
+endif()
 file(CHMOD ${stamp_dir}/reset_head.sh 
 PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
