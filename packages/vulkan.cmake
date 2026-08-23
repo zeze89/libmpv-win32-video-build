@@ -5,7 +5,15 @@ ExternalProject_Add(vulkan
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    # SABITLENDI 2026-08-23. Onceki hali GIT_TAG main idi ve derleme
+    # "error: sha1 information is lacking or useless (loader/CMakeLists.txt)"
+    # ile patladi: Vulkan-Loader o dosyayi 2026-08-18'de degistirdi, bizim
+    # vulkan-0001 yamamiz artik tutmuyor. Bu depo upstream'in eski bir
+    # anlik goruntusu (upstream yamayi tamamen kaldirip vulkan_asm'e gecti,
+    # o degisken bizde tanimli degil), o yuzden dosyayi senkronlamak yerine
+    # surumu sabitliyoruz. 1.4.357.0 = 2026-07-17: yamanin tuttugu son
+    # doneme ait ama GCC 16 icin yeterince yeni (eski surumler derlenmiyor).
+    GIT_TAG vulkan-sdk-1.4.357.0
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/vulkan-*.patch
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja
