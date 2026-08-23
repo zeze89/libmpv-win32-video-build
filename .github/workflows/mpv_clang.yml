@@ -133,6 +133,18 @@ jobs:
           $MPV_TARBALL && ninja -C build_$BIT mpv-release || ninja -C build_$BIT mpv
           $MPV_TARBALL && echo "mpv_ver=$(cat build_$BIT/packages/mpv-release-prefix/VERSION)" >> $GITHUB_OUTPUT || echo "mpv_ver=UNKNOWN" >> $GITHUB_OUTPUT
 
+      # Yapilandirma/derleme hatalari LOG_* nedeniyle damga dizinindeki log
+      # dosyalarina gidiyor ve kosucu silinince kayboluyordu; xxhash arizasi
+      # bu yuzden koru tahminle cozuldu (32640811407). Dusen kosuda son bir
+      # saatin dolu loglarini dogrudan kosu ciktisina dok.
+      - name: Dump failed package logs
+        if: failure()
+        run: |
+          find build_$BIT/packages -path '*-stamp/*.log' -mmin -60 -size +0c 2>/dev/null | while read f; do
+            echo "===== $f ====="
+            tail -n 80 "$f"
+          done
+
       - name: Packaging mpv
         run: |
           mkdir -p release_$BIT
