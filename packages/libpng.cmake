@@ -1,6 +1,15 @@
 ExternalProject_Add(libpng
     DEPENDS zlib
     GIT_REPOSITORY https://github.com/glennrp/libpng.git
+    # VARSAYILAN DAL DEGISTI (Nightmare TV, 2026-08-22).
+    # GIT_TAG yoktu; CMake o durumda `master` varsayar ve bu depo
+    # varsayilan dalini `libpng18` yapmis:
+    #   fatal: invalid reference: master
+    # Indirme dususu tek pakete kalmiyor: `ninja download` ilk hatada
+    # duruyor, sonraki paketler hic inmiyor ve guncelleme asamasi
+    # olmayan kaynaklarda git'i yukari yuruttuyor.
+    # Tarifin niyeti varsayilan dali almakti; adi guncelliyoruz.
+    GIT_TAG libpng18
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

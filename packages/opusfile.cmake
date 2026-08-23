@@ -2,6 +2,15 @@ ExternalProject_Add(opusfile
     DEPENDS
         opus
     GIT_REPOSITORY https://github.com/xiph/opusfile.git
+    # VARSAYILAN DAL DEGISTI (Nightmare TV, 2026-08-22).
+    # GIT_TAG yoktu; CMake o durumda `master` varsayar ve bu depo
+    # varsayilan dalini `main` yapmis:
+    #   fatal: invalid reference: master
+    # Indirme dususu tek pakete kalmiyor: `ninja download` ilk hatada
+    # duruyor, sonraki paketler hic inmiyor ve guncelleme asamasi
+    # olmayan kaynaklarda git'i yukari yuruttuyor.
+    # Tarifin niyeti varsayilan dali almakti; adi guncelliyoruz.
+    GIT_TAG main
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
