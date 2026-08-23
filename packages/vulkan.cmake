@@ -21,7 +21,13 @@ ExternalProject_Add(vulkan
     # yamanin ON-GORUNTU blob'larini arar; klon --filter=tree:0 ile kismi
     # alindigi icin o nesneler yerelde yok ve git "sha1 information is
     # lacking or useless" diyor. git apply metinsel uygular, blob aramaz.
-    PATCH_COMMAND ${EXEC} git apply -v ${CMAKE_CURRENT_SOURCE_DIR}/vulkan-0001-cross-compile-static-linking-hacks.patch
+    # Yama once IZLENMEYEN dosyalar temizlenerek uygulanir: yamanin yarattigi
+    # vulkan_own.pc.in git reset --hard'dan sag cikiyor (izlenmiyor) ve ikinci
+    # uygulamada 'already exists in working directory' veriyordu (32641596322).
+    # git am bu derde dusmezdi (commit'i reset soker) ama kismi klonda --3way
+    # calismiyor; apply + on-temizlik ayni sonucu veriyor.
+    PATCH_COMMAND ${EXEC} git clean -fdx -q
+    COMMAND ${EXEC} git apply -v ${CMAKE_CURRENT_SOURCE_DIR}/vulkan-0001-cross-compile-static-linking-hacks.patch
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja
         -DCMAKE_BUILD_TYPE=Release
