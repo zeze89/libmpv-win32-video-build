@@ -5,7 +5,11 @@ ExternalProject_Add(xxhash
     GIT_TAG dev
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/cmake_unofficial -B<BINARY_DIR>
+    # xxhash cmake dosyalarini cmake_unofficial/ dizininden build/cmake/
+    # dizinine tasidi; dev dali sabitsiz cekildigi icin eski yol yok olup
+    # configure aninda oluyordu (kosu 32640811407). shinchiro guncel
+    # tarifi de build/cmake kullaniyor.
+    CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/build/cmake -B<BINARY_DIR>
         -G Ninja
         -DCMAKE_BUILD_TYPE=Release
         -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}
