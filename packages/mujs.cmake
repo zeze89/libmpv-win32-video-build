@@ -11,6 +11,11 @@ ExternalProject_Add(mujs
     GIT_REPOSITORY https://github.com/ccxvii/mujs.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
+    # Yamanin uydugu son commit (2025-02-10); sonraki 2025-08-13 Makefile
+    # degisikligi yamayi bozuyor ve kismi klonda 3way calismiyor. Uyum git
+    # apply --check ile OLCULDU (fork ve upstream yamasi birebir ayni;
+    # upstream yesili bayat onbellek + hic yeniden kosmayan yama adimi).
+    GIT_RESET 94ec2f2d7c0a48200dcc433e98fc172454c8d683
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/mujs-*.patch
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
