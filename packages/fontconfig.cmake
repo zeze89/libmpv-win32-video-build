@@ -9,10 +9,11 @@ ExternalProject_Add(fontconfig
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     GIT_TAG main
-    # Yamanin (git am --3way) hedefledigi caga sabit (2024-01): guncel uc
-    # src/fcdir.c'yi degistirdi, yama duz uygulanamiyor ve kismi klonda
-    # 3way de calismiyor (32642631587, vulkan ile ayni sinif).
-    GIT_RESET 14d466b30a8ab4a9d789977ed94f2c30e7209267
+    # Yamalar upstream'den tazelendi ve su tepede git apply --check ile
+    # OLCULEREK dogrulandi (2026-08-23). Fork'un eski yamasi hicbir caga
+    # uymuyordu (2022-2024 tarandi); upstream yamayi rebase edip guncel
+    # tutuyormus. Sabitleme yamanin dogrulandigi tepeye.
+    GIT_RESET 2e1135a5d46eb12da7b63af89bcb3d363feb928c
     GIT_CLONE_FLAGS "--filter=tree:0"
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/fontconfig-*.patch
     CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>
