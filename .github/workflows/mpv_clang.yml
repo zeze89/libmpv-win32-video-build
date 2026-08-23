@@ -169,7 +169,11 @@ jobs:
       - name: Probe ffmpeg config.log
         if: failure()
         run: |
-          tail -n 60 build_$BIT/packages/ffmpeg-prefix/src/ffmpeg-build/ffbuild/config.log 2>&1 | tail -60
+          tail -n 220 build_$BIT/packages/ffmpeg-prefix/src/ffmpeg-build/ffbuild/config.log 2>&1
+          echo "--- pkg-config --libs --static libplacebo:"
+          clang_root/bin/x86_64-w64-mingw32-pkg-config --libs --static libplacebo 2>&1 || true
+          echo "--- pkg-config --exists sonucu:"
+          clang_root/bin/x86_64-w64-mingw32-pkg-config --exists --print-errors "libplacebo >= 4.192.0" 2>&1 && echo VAR || echo YOK
           echo "--- pkgconfig dizini:"; ls build_$BIT/x86_64-w64-mingw32/lib/pkgconfig 2>&1 | head -40
           echo "--- libplacebo.pc:"; cat build_$BIT/x86_64-w64-mingw32/lib/pkgconfig/libplacebo.pc 2>&1 | head -20
 
