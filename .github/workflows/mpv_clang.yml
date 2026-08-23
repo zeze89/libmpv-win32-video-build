@@ -137,6 +137,19 @@ jobs:
       # dosyalarina gidiyor ve kosucu silinince kayboluyordu; xxhash arizasi
       # bu yuzden koru tahminle cozuldu (32640811407). Dusen kosuda son bir
       # saatin dolu loglarini dogrudan kosu ciktisina dok.
+      # graphengine/libzimg arizasi icin durum sondasi (2026-08-23):
+      # dosyalarin ariza ANINDAKI gercek hali tahmin yerine kanit versin.
+      - name: Probe graphengine state
+        if: failure()
+        run: |
+          echo "--- src_packages:"; ls src_packages 2>&1 | head -40
+          echo "--- graphengine koku:"; ls -la src_packages/graphengine 2>&1 | head -12
+          echo "--- graphengine/graphengine:"; ls -la src_packages/graphengine/graphengine 2>&1 | head -12
+          echo "--- graphengine git:"; git -C src_packages/graphengine log --oneline -1 2>&1 | head -2; git -C src_packages/graphengine status --short 2>&1 | head -8
+          echo "--- libzimg symlink:"; ls -la src_packages/libzimg/graphengine 2>&1 | head -4
+          echo "--- libzimg stamp:"; ls build_$BIT/packages/libzimg-prefix/src/libzimg-stamp/ 2>&1 | head -20
+          echo "--- graphengine stamp:"; ls build_$BIT/packages/graphengine-prefix/src/graphengine-stamp/ 2>&1 | head -20
+
       - name: Dump failed package logs
         if: failure()
         run: |

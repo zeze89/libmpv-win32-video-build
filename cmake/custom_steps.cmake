@@ -16,12 +16,15 @@ function(cleanup _name _last_step)
 
     if(_git_repository)
         if(_build_in_source)
-            set(remove_cmd "git -C <SOURCE_DIR> clean -dfx")
+            set(remove_cmd "git -C <SOURCE_DIR> clean -dfx || true")
         else()
             # upstream e43e4a860: rm -rf dir/* icin glob acilmiyor (exec
             # sarmalayicisi) ve rm "failed to remove ./" ile dusuyordu
             # (32644286761, mbedtls-postremovebuild). find guvenli.
-            set(remove_cmd "find <BINARY_DIR> -mindepth 1 -delete && git -C <SOURCE_DIR> clean -df")
+            # git clean burada || true: mbedtls kaynak temizligi "failed to
+            # remove ./: Invalid argument" ile dusuyordu (32644678320) ve
+            # yer-acma adimi derlemeyi oldurmemeli.
+            set(remove_cmd "find <BINARY_DIR> -mindepth 1 -delete && git -C <SOURCE_DIR> clean -df || true")
         endif()
         # KAYNAK DIZINI HENUZ KLONLANMAMISSA ATLA (Nightmare TV, 2026-08-22).
         #
@@ -33,9 +36,12 @@ function(cleanup _name _last_step)
         #  2. Daha kotusu: `git restore .` YANLIS depoda calisir ve
         #     tarife uyguladigimiz yamalari geri alabilir.
         # Klonlanmamis paketin sifirlanacak bir seyi zaten yok.
-        set(COMMAND_FORCE_UPDATE COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git -C <SOURCE_DIR> am --abort 2> /dev/null || true"
-                                 COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; exec ${stamp_dir}/reset_head.sh"
-                                 COMMAND bash -c "[ -e <SOURCE_DIR>/.git ] || exit 0; git -C <SOURCE_DIR> restore .")
+        # DIKKAT: CMake COMMAND icinde ";" liste ayracidir; bu uclu 2026-08-22
+        # itibariyle sessizce BOLUNUP no-op calisiyordu (guard ayri dusmus,
+        # govde calismayan arguman olmustu). Semicolonsuz yeniden yazildi.
+        set(COMMAND_FORCE_UPDATE COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || git -C <SOURCE_DIR> am --abort 2> /dev/null || true"
+                                 COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || exec ${stamp_dir}/reset_head.sh"
+                                 COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || git -C <SOURCE_DIR> restore . || true")
     endif()
 
     # <STAMP_DIR> doesn't resolve into full path, so <LOG_DIR> is used instead since its same folder.
