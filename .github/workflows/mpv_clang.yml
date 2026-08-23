@@ -212,8 +212,14 @@ jobs:
 
       - name: Copying ffmpeg
         run: |
-          hash=$(git -C src_packages/ffmpeg rev-parse --short HEAD)
-          7z a -m0=lzma2 -mx=9 -ms=on release_$BIT/ffmpeg-${{ env.arch }}${{ env.x86_64_level }}-git-$hash.7z ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe
+          # Yalniz-lib derlemede ffmpeg.exe uretilmez (32650807497);
+          # varsa paketle, yoksa atla. Asil urun mpv-dev (libmpv).
+          if [ ! -f ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe ]; then
+            echo "ffmpeg.exe yok (yalniz-lib derleme), adim atlandi"
+          else
+            hash=$(git -C src_packages/ffmpeg rev-parse --short HEAD)
+            7z a -m0=lzma2 -mx=9 -ms=on release_$BIT/ffmpeg-${{ env.arch }}${{ env.x86_64_level }}-git-$hash.7z ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe
+          fi
 
       - name: Collecting logs
         if: always()
