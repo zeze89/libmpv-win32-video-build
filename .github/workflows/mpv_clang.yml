@@ -242,6 +242,15 @@ jobs:
           name: mpv-${{ matrix.bit }}
           path: release_${{ matrix.bit }}/mpv-${{ env.arch }}*
 
+      # media_kit icin asil urun: libmpv-2.dll + libmpv.dll.a + basliklar.
+      # copy-package-dir bunu build_$BIT/mpv-dev-* olarak birakiyor ama
+      # hicbir adim yuklemiyordu (2026-08-23).
+      - name: Uploading ${{ matrix.bit }} libmpv dev
+        uses: actions/upload-artifact@master
+        with:
+          name: libmpv-${{ matrix.bit }}-dev
+          path: build_${{ matrix.bit }}/mpv-dev-*
+
       - name: Uploading ${{ matrix.bit }} debug
         uses: actions/upload-artifact@master
         with:
