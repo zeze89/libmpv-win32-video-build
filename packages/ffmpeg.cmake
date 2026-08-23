@@ -283,12 +283,14 @@ ExternalProject_Add(ffmpeg
         # Neden bunlar: dusuk bit hizli IPTV yayinlarinda gurultu ve
         # bantlanma var, elimizde hic denoise yoktu. Secim gercek zamanli
         # 1080p50 yuke gore yapildi:
-        #   hqdn3d      ucuz, zamansal+uzamsal, canlida kullanilabilir
-        #   atadenoise  uyarlamali zamansal, ucuz, detay korur
+        #   atadenoise  uyarlamali zamansal denoise, ucuz, detay korur
+        # hqdn3d DENENDI VE CIKARILDI (2026-08-23): ffmpeg'de GPL, bizim
+        # derlememiz --disable-gpl. Beyaz listeye yazmak sessizce etkisiz
+        # kaliyor ("Option vf: hqdn3d doesn't exist"). GPL'e gecmek urunun
+        # lisans durusunu degistirir, tek filtre icin yapilmaz.
         #   unsharp     CAS golgelendiricisine alternatif keskinlestirme
         #   gradfun     bantlanma (mpv deband'inin yapamadigi durumlar)
         # nlmeans BILEREK YOK: kalitesi iyi ama 1080p50 canlida yetismez.
-        --enable-filter=hqdn3d
         --enable-filter=atadenoise
         --enable-filter=unsharp
         --enable-filter=gradfun
