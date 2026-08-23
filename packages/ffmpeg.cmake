@@ -278,6 +278,20 @@ ExternalProject_Add(ffmpeg
         # yazip ayristiriciyi KOMPLE kapatiyordu. Yani deinterlace=yes
         # ayari duruyor, filtre ikilide var, ama grafik hic kurulmuyor.
         # Belirti: kayan yazida yatay ikizlenme (tarak), vfps=25 sabit.
+        # GORUNTU IYILESTIRME FILTRELERI (2026-08-23, sahibin istegi).
+#
+        # Neden bunlar: dusuk bit hizli IPTV yayinlarinda gurultu ve
+        # bantlanma var, elimizde hic denoise yoktu. Secim gercek zamanli
+        # 1080p50 yuke gore yapildi:
+        #   hqdn3d      ucuz, zamansal+uzamsal, canlida kullanilabilir
+        #   atadenoise  uyarlamali zamansal, ucuz, detay korur
+        #   unsharp     CAS golgelendiricisine alternatif keskinlestirme
+        #   gradfun     bantlanma (mpv deband'inin yapamadigi durumlar)
+        # nlmeans BILEREK YOK: kalitesi iyi ama 1080p50 canlida yetismez.
+        --enable-filter=hqdn3d
+        --enable-filter=atadenoise
+        --enable-filter=unsharp
+        --enable-filter=gradfun
         --enable-filter=scale
         --enable-filter=format
         --enable-filter=null
