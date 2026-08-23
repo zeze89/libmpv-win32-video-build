@@ -16,7 +16,11 @@ ExternalProject_Add(libzimg
         --disable-shared
     BUILD_COMMAND ${MAKE}
     INSTALL_COMMAND ${MAKE} install
-            COMMAND bash -c "git -C ${src_graphengine} clean -dfx"
+            # .git yoksa git YUKARI yuruyup workspace deposunu bulur ve
+            # clean -dfx TUM izlenmeyenleri (src_packages dahil) supurur.
+            # graphengine agacinin bos kalmasinin muhtemel sebebi bu
+            # (32643884491: cpuinfo.cpp yok). Guard sart, semicolonsuz.
+            COMMAND bash -c "[ -e ${src_graphengine}/.git ] && git -C ${src_graphengine} clean -dfx || true"
     BUILD_IN_SOURCE 1
     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
 )
