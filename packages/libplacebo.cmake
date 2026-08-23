@@ -18,6 +18,11 @@ ExternalProject_Add(libplacebo
     GIT_RESET 61c1c589f66bd913a0680d741a24e32894ed127b
     GIT_SUBMODULES ""
     UPDATE_COMMAND ""
+    # Sabitli 2023-09 utils_gen.py, konteynerin Python 3.14'unde
+    # 'expected an Element, not ElementTree' ile oluyor (32643166063).
+    # Yama libplacebo'nun kendi duzeltmesi (12509c0f1e, 2025-07); sabitli
+    # surume uydugu git apply --check ile olculdu.
+    PATCH_COMMAND ${EXEC} git apply -v ${CMAKE_CURRENT_SOURCE_DIR}/libplacebo-0001-fix-utils-gen-python314.patch
     CONFIGURE_COMMAND ""
     COMMAND bash -c "rm -rf <SOURCE_DIR>/3rdparty/glad"
     COMMAND bash -c "rm -rf <SOURCE_DIR>/3rdparty/fast_float"
