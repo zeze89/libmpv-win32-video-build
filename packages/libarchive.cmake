@@ -34,6 +34,13 @@ ExternalProject_Add(libarchive
         -DENABLE_CAT=OFF
         -DENABLE_TAR=OFF
         -DENABLE_WERROR=OFF
+        # Araclar (bsdtar/bsdcpio/bsdcat/bsdunzip) kapali: bize yalniz
+        # libarchive.a lazim ve bsdunzip bcrypt linkinde dusuyordu
+        # (32646069654). Kutuphane hedefi araclarsiz temiz derleniyor.
+        -DENABLE_TAR=OFF
+        -DENABLE_CPIO=OFF
+        -DENABLE_CAT=OFF
+        -DENABLE_UNZIP=OFF
         -DBUILD_TESTING=OFF
         -DENABLE_TEST=OFF
         -DWINDOWS_VERSION=WIN10

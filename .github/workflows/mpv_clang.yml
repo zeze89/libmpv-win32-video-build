@@ -123,6 +123,17 @@ jobs:
           cmake -DTARGET_ARCH=${{ env.arch }}-w64-mingw32 -DCOMPILER_TOOLCHAIN=clang ${{ env.x86_64_v3_ARCH }} -DCMAKE_INSTALL_PREFIX=$PWD/clang_root -DMINGW_INSTALL_PREFIX=$PWD/build_$BIT/$BIT-w64-mingw32 -DSINGLE_SOURCE_LOCATION=$PWD/src_packages -DRUSTUP_LOCATION=$PWD/clang_root/install_rustup -DENABLE_CCACHE=ON -DCLANG_PACKAGES_LTO=ON -G Ninja --fresh -B build_$BIT -S $PWD
           ninja -k 0 -C build_$BIT download || true  # -k 0: ilk hatada durma, tum eksikleri tek kosuda gor
 
+      # GECICI (2026-08-23): libarchive tarif bayraklari degisti ama eski
+      # configure damgasi gecerli kaldigi icin yeni bayraklar hic
+      # uygulanmiyordu. Damgalari dusurmek yeniden yapilandirmayi zorlar;
+      # ilk yesil kosudan sonra bu adim silinebilir.
+      - name: Force libarchive reconfigure (temp)
+        run: |
+          rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-configure
+          rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-build
+          rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-install
+          rm -rf build_$BIT/packages/libarchive-prefix/src/libarchive-build
+
       - name: Building mpv
         id: build_mpv_step
         env:
