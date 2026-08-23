@@ -146,7 +146,12 @@ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_
         # dizini <SOURCE_DIR> oldugu icin .git goreli yazilir.
         COMMAND bash -c "[ ! -e .git ] || git am --abort 2> /dev/null || true"
         COMMAND bash -c "[ ! -e .git ] || git fetch --filter=tree:0 --no-recurse-submodules || true"
-        COMMAND bash -c "[ -e .git ] && exec ${stamp_dir}/reset_head.sh || rm -f ${stamp_dir}/${_name}-download ${stamp_dir}/${_name}-gitclone-lastrun.txt"
+        # Sira ONEMLI: eski hali "[ -e .git ] && exec script || rm" idi ve
+        # script BASARISIZ olunca da || koluna dusup hatayi YUTUYORDU
+        # (angle-headers reseti boyle sessiz kacti, 32647699940). Simdi
+        # once .git yoklugu ele aliniyor; .git varsa exec edilen betigin
+        # gercek cikis kodu adimin sonucu oluyor.
+        COMMAND bash -c "[ ! -e .git ] && rm -f ${stamp_dir}/${_name}-download ${stamp_dir}/${_name}-gitclone-lastrun.txt || exec ${stamp_dir}/reset_head.sh"
     )
     ExternalProject_Add_StepTargets(${_name} force-update)
 

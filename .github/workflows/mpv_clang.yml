@@ -177,6 +177,14 @@ jobs:
           echo "--- graphengine stamp:"; ls build_$BIT/packages/graphengine-prefix/src/graphengine-stamp/ 2>&1 | head -20
 
       # ffmpeg configure arizalari icin gercek kanit ffbuild/config.log
+      - name: Probe angle-headers state
+        if: failure()
+        run: |
+          echo "--- kaynak HEAD:"; git -C src_packages/angle-headers log --oneline -1 2>&1
+          echo "--- kaynakta D3D9:"; grep -c EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE src_packages/angle-headers/include/EGL/eglext_angle.h 2>&1
+          echo "--- prefixte D3D9:"; grep -c EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE build_$BIT/x86_64-w64-mingw32/include/EGL/eglext_angle.h 2>&1
+          echo "--- reset_head icerigi:"; cat build_$BIT/packages/angle-headers-prefix/src/angle-headers-stamp/reset_head.sh 2>&1 | head -20
+
       - name: Probe ffmpeg config.log
         if: failure()
         run: |
