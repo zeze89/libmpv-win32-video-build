@@ -169,7 +169,15 @@ jobs:
 
       - name: Saving clang root
 
-        if: always()  # derleme dusse de yapilani sakla
+        # SADECE BASARIDA (Nightmare TV, 2026-08-22, kendi hatamin duzeltmesi).
+        #
+        # `if: always()` eklemek yarim kalmis bir arac zincirini onbellege
+        # yaziyordu. Sonraki kosu onu geri yukleyip "onbellek eslesti" diye
+        # derleme adimini ATLIYOR ve 90 saniyede SAHTE BIR BASARI donuyordu;
+        # eksiklik ancak mpv asamasinda ortaya cikti:
+        #   cp: cannot stat '.../build_x86_64/x86_64-w64-mingw32/...'
+        # Yarim bir onbellek, onbellek olmamasindan kotudur.
+        if: success()
         uses: actions/cache/save@main
         with:
           path: clang_root
@@ -177,7 +185,15 @@ jobs:
 
       - name: Saving x86_64 toolchain
 
-        if: always()  # derleme dusse de yapilani sakla
+        # SADECE BASARIDA (Nightmare TV, 2026-08-22, kendi hatamin duzeltmesi).
+        #
+        # `if: always()` eklemek yarim kalmis bir arac zincirini onbellege
+        # yaziyordu. Sonraki kosu onu geri yukleyip "onbellek eslesti" diye
+        # derleme adimini ATLIYOR ve 90 saniyede SAHTE BIR BASARI donuyordu;
+        # eksiklik ancak mpv asamasinda ortaya cikti:
+        #   cp: cannot stat '.../build_x86_64/x86_64-w64-mingw32/...'
+        # Yarim bir onbellek, onbellek olmamasindan kotudur.
+        if: success()
         uses: actions/cache/save@main
         with:
           path: build_x86_64
@@ -185,7 +201,15 @@ jobs:
 
       - name: Saving x86_64_v3 toolchain
 
-        if: always()  # derleme dusse de yapilani sakla
+        # SADECE BASARIDA (Nightmare TV, 2026-08-22, kendi hatamin duzeltmesi).
+        #
+        # `if: always()` eklemek yarim kalmis bir arac zincirini onbellege
+        # yaziyordu. Sonraki kosu onu geri yukleyip "onbellek eslesti" diye
+        # derleme adimini ATLIYOR ve 90 saniyede SAHTE BIR BASARI donuyordu;
+        # eksiklik ancak mpv asamasinda ortaya cikti:
+        #   cp: cannot stat '.../build_x86_64/x86_64-w64-mingw32/...'
+        # Yarim bir onbellek, onbellek olmamasindan kotudur.
+        if: success()
         uses: actions/cache/save@main
         with:
           path: build_x86_64_v3
@@ -193,7 +217,15 @@ jobs:
 
       - name: Saving i686 toolchain
 
-        if: always()  # derleme dusse de yapilani sakla
+        # SADECE BASARIDA (Nightmare TV, 2026-08-22, kendi hatamin duzeltmesi).
+        #
+        # `if: always()` eklemek yarim kalmis bir arac zincirini onbellege
+        # yaziyordu. Sonraki kosu onu geri yukleyip "onbellek eslesti" diye
+        # derleme adimini ATLIYOR ve 90 saniyede SAHTE BIR BASARI donuyordu;
+        # eksiklik ancak mpv asamasinda ortaya cikti:
+        #   cp: cannot stat '.../build_x86_64/x86_64-w64-mingw32/...'
+        # Yarim bir onbellek, onbellek olmamasindan kotudur.
+        if: success()
         uses: actions/cache/save@main
         with:
           path: build_i686
