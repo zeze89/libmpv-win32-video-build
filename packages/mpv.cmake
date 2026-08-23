@@ -59,8 +59,8 @@ ExternalProject_Add_Step(mpv strip-binary
     ${mpv_add_debuglink}
     # Bu fork yalniz libmpv uretiyor (media_kit); CLI ikilileri yok ve strip
     # onlara takiliyordu (32648699580). Varsa soy, yoksa gec; dll zorunlu.
-    COMMAND bash -c "[ ! -f <BINARY_DIR>/mpv.exe ] || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.exe"
-    COMMAND bash -c "[ ! -f <BINARY_DIR>/mpv.com ] || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.com"
+    COMMAND ${EXEC} bash -c "[ ! -f <BINARY_DIR>/mpv.exe ] || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.exe"
+    COMMAND ${EXEC} bash -c "[ ! -f <BINARY_DIR>/mpv.com ] || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.com"
     COMMAND ${EXEC} ${TARGET_ARCH}-strip -s <BINARY_DIR>/libmpv-2.dll
     COMMENT "Stripping mpv binaries"
 )
