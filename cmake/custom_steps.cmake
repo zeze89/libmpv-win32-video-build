@@ -40,7 +40,10 @@ function(cleanup _name _last_step)
         # itibariyle sessizce BOLUNUP no-op calisiyordu (guard ayri dusmus,
         # govde calismayan arguman olmustu). Semicolonsuz yeniden yazildi.
         set(COMMAND_FORCE_UPDATE COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || git -C <SOURCE_DIR> am --abort 2> /dev/null || true"
-                                 COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || exec ${stamp_dir}/reset_head.sh"
+                                 # Temizlik baglaminda reset EN-IYI-CABA: exec yerine dogrudan
+                                 # cagri + || true. Katilik force-update adiminda; buradaki
+                                 # amac yalnizca toparlamak (32648375504 dersi).
+                                 COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || ${stamp_dir}/reset_head.sh || true"
                                  COMMAND bash -c "[ ! -e <SOURCE_DIR>/.git ] || git -C <SOURCE_DIR> restore . || true")
     endif()
 
@@ -121,6 +124,12 @@ if(NOT "${git_reset}" STREQUAL "")
 file(WRITE ${stamp_dir}/reset_head.sh
 "#!/bin/bash
 set -e
+# Tarifler bazi paketlerde submodule yollarina SYMLINK koyuyor
+# (libplacebo 3rdparty/*, libzimg graphengine); git reset bunlara
+# 'expected submodule path not to be a symbolic link' der (128,
+# 32648375504). Once temizle: izlenen symlinkleri reset geri
+# getirir, yapay olanlari configure yeniden kurar.
+find ${source_dir} -maxdepth 3 -type l -delete 2>/dev/null || true
 before=$(git -C ${source_dir} rev-parse HEAD)
 dirty=$(git -C ${source_dir} status --porcelain --untracked-files=no)
 git -C ${source_dir} reset --hard ${reset} -q
@@ -134,6 +143,12 @@ else()
 file(WRITE ${stamp_dir}/reset_head.sh
 "#!/bin/bash
 set -e
+# Tarifler bazi paketlerde submodule yollarina SYMLINK koyuyor
+# (libplacebo 3rdparty/*, libzimg graphengine); git reset bunlara
+# 'expected submodule path not to be a symbolic link' der (128,
+# 32648375504). Once temizle: izlenen symlinkleri reset geri
+# getirir, yapay olanlari configure yeniden kurar.
+find ${source_dir} -maxdepth 3 -type l -delete 2>/dev/null || true
 if [[ ! -f \"${stamp_dir}/${_name}-patch\"  || \"${stamp_dir}/${_name}-download\" -nt \"${stamp_dir}/${_name}-patch\" || ! -f \"${stamp_dir}/HEAD\" || \"$(cat ${stamp_dir}/HEAD)\" != \"$(git -C ${source_dir} rev-parse @{u})\" ]]; then
     git -C ${source_dir} reset --hard ${reset} -q
     # Damga silme artik GIT_RESET durumunda da yapiliyor (2026-08-23):
