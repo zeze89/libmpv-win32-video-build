@@ -268,6 +268,25 @@ ExternalProject_Add(ffmpeg
         # Ikisi de LGPL 2.1+, yani --disable-gpl / -Dgpl=false duruşu bozulmaz.
         --enable-filter=yadif
         --enable-filter=bwdif
+        # ALTYAPI FILTRELERI (2026-08-23, sahada olculdu).
+        #
+        # yadif/bwdif tek basina YETMIYOR: lavfi grafigi kurulurken
+        # bicim donusumu icin scale/format gerekiyor ve yoklugunda mpv
+        #   "ffmpeg: 'scale' filter not present, cannot convert formats"
+        #   "lavfi: failed to configure the filter graph"
+        #   "vf: Disabling filter userdeint because it has failed"
+        # yazip ayristiriciyi KOMPLE kapatiyordu. Yani deinterlace=yes
+        # ayari duruyor, filtre ikilide var, ama grafik hic kurulmuyor.
+        # Belirti: kayan yazida yatay ikizlenme (tarak), vfps=25 sabit.
+        --enable-filter=scale
+        --enable-filter=format
+        --enable-filter=null
+        --enable-filter=copy
+        --enable-filter=setpts
+        --enable-filter=aformat
+        --enable-filter=aresample
+        --enable-filter=anull
+        --enable-filter=asetpts
         # Muxer: stok derleme --disable-muxers ve tek bir --enable-muxer= yok.
         # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
         # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
