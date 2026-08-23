@@ -137,6 +137,15 @@ jobs:
           # ("No such file or directory", 32646291554).
           rm -rf build_$BIT/packages/libarchive-prefix/src/libarchive-build
           mkdir -p build_$BIT/packages/libarchive-prefix/src/libarchive-build
+          # libdovi/rav1e: rust LTO bayraklari degisti; bitcode'lu eski .a
+          # damgalar gecerli kaldikca prefix'te yasamaya devam ederdi
+          # (libarchive dersi). Cargo bayrak degisimini kendi parmak izinden
+          # gorup sifirdan derler, damgalari dusurmek yeterli.
+          for p in libdovi rav1e; do
+            rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-configure
+            rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-build
+            rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-install
+          done
 
       - name: Building mpv
         id: build_mpv_step
