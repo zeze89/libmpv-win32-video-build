@@ -13,7 +13,13 @@
 # Surumu yukseltmek yerine bu uc taniyi eski davranisina donduruyoruz:
 # mingw-w64 surumu LLVM 17.0.6 ile eslesmek icin bilerek sabit ve oynatmak
 # libunwind uyumsuzlugunu geri getirir.
-set(GENDEF_CFLAGS "-Wno-error=discarded-qualifiers -Wno-error=incompatible-pointer-types -Wno-error=int-conversion")
+# TEK BAYRAK, BOSLUKSUZ. Uc ayri -Wno-error=... denendi ve tarifin
+# ${EXEC} sarmalayicisi (bir kabuk betigi) tirnakli argumani
+# bosluklardan bolup ikinci bayragi KOMUT sandi:
+#   exec: line 10: -Wno-error=incompatible-pointer-types: command not found
+# Blanket -Wno-error tek belirtec, bolunemez. Kapsam yalnizca gendef:
+# mingw-w64'un kucuk bir host araci, uretilen koda girmiyor.
+set(GENDEF_CFLAGS "-Wno-error")
 
 ExternalProject_Add(gendef
     DEPENDS
