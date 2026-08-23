@@ -12,6 +12,10 @@ ExternalProject_Add(libplacebo
     GIT_REPOSITORY https://github.com/haasn/libplacebo.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
+    # mpv 652a1dd9 (2023-09-24) cagina sabit: 2026 master pl_* API o mpv
+    # ile derlenmez. Bu sha o tarihte master ucuydu, yani shinchiro o gun
+    # fiilen bu ikiliyle derliyordu.
+    GIT_RESET 61c1c589f66bd913a0680d741a24e32894ed127b
     GIT_SUBMODULES ""
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
