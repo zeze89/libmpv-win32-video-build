@@ -5,15 +5,18 @@ ExternalProject_Add(vulkan
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    # SABITLENDI 2026-08-23. Onceki hali GIT_TAG main idi ve derleme
-    # "error: sha1 information is lacking or useless (loader/CMakeLists.txt)"
-    # ile patladi: Vulkan-Loader o dosyayi 2026-08-18'de degistirdi, bizim
-    # vulkan-0001 yamamiz artik tutmuyor. Bu depo upstream'in eski bir
-    # anlik goruntusu (upstream yamayi tamamen kaldirip vulkan_asm'e gecti,
-    # o degisken bizde tanimli degil), o yuzden dosyayi senkronlamak yerine
-    # surumu sabitliyoruz. 1.4.357.0 = 2026-07-17: yamanin tuttugu son
-    # doneme ait ama GCC 16 icin yeterince yeni (eski surumler derlenmiyor).
-    GIT_TAG vulkan-sdk-1.4.357.0
+    # SABITLEME (2026-08-23, uc deneme sonrasi dogru bicim):
+    #  - Ciplak GIT_TAG <etiket> klonu detached birakir ve force-update
+    #    @{u} reset adiminda 'HEAD does not point to a branch' ile olur.
+    #    Dogru mekanizma GIT_TAG main + GIT_RESET <sha>: HEAD dalda kalir,
+    #    reset_head.sh sabit sha uzerine reset atar (llvm ve mbedtls ayni
+    #    deseni kullaniyor ve arac zinciri bununla yesil).
+    #  - Surum 1.3.275.0: yama git apply --check ile BU surumde temiz
+    #    uygulaniyor, 1.4.357.0 uzerinde 'patch does not apply' veriyor.
+    #  - Onceki 1.3.275.0 denemesi BOS commit cikti (replace tutmayinca
+    #    ayni icerik geri gitti); artik her push sonrasi blob dogrulanir.
+    GIT_TAG main
+    GIT_RESET 00893b9a03e526aec2c5bf487521d16dfa435229
     # git am --3way YERINE git apply (2026-08-23). Uc yollu birlestirme
     # yamanin ON-GORUNTU blob'larini arar; klon --filter=tree:0 ile kismi
     # alindigi icin o nesneler yerelde yok ve git "sha1 information is
