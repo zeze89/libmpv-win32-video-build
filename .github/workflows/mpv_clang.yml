@@ -215,6 +215,9 @@ jobs:
     name: Upload releases
     runs-on: ubuntu-22.04  # not: derleyici KONTEYNERDEN gelir, bunu degistirmek onu etkilemez
     needs: build_mpv
+    # Uc mimari bekliyor (i686/x86_64/v3), fork tek mimari derliyor;
+    # mv adimi her kosuda olurdu. Artifakt build isinden geliyor. (2026-08-23)
+    if: ${{ false }}
     env:
       GH_TOKEN: ${{ github.token }}
       CURL_RETRIES: "--connect-timeout 60 --retry 999 --retry-delay 5 --retry-all-errors"
@@ -354,7 +357,9 @@ jobs:
     name: Gist
     runs-on: ubuntu-22.04  # not: derleyici KONTEYNERDEN gelir, bunu degistirmek onu etkilemez
     needs: build_mpv
-    if: ${{ always() }}
+    # Gist shinchiro hesabina push ediyor ve token yok; always() her
+    # kosuyu kirmiziya boyuyordu. Kapatildi (2026-08-23).
+    if: ${{ false }}
     env:
       GH_TOKEN: ${{ secrets.GIST_TOKEN }}
       RUN_ID: ${{ github.run_id }}
