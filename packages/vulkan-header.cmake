@@ -5,6 +5,9 @@ ExternalProject_Add(vulkan-header
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     GIT_TAG main
+    # Loader 1.3.275.0 cagina sabit (bkz. vulkan.cmake); basliklar da ayni
+    # caga sabitlenir ki loader kaynak kodu / baslik uyumsuzlugu dogmasin.
+    GIT_RESET 217e93c664ec6704ec2d8c36fa116c1a4a1e2d40
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja
         -DCMAKE_BUILD_TYPE=Release
