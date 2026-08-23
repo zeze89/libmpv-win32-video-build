@@ -8,14 +8,19 @@ ExternalProject_Add(libzimg
     GIT_SUBMODULES ""
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
-    COMMAND bash -c "rm -rf <SOURCE_DIR>/graphengine"
-    COMMAND bash -c "ln -s ${src_graphengine} <SOURCE_DIR>/graphengine"
+    # Baglanti KENDINI ONARIR: symlink bir kosuda yok olmus, make eksik
+    # yolu GERCEK klasor olarak yaratmisti (32645154669 sondasi kanitladi;
+    # icinde yalniz filter_validation vardi). Ayni onarim build ve install
+    # oncesinde de kosuyor, cunku damgalar gecerliyken configure atlanir.
+    COMMAND bash -c "rm -rf <SOURCE_DIR>/graphengine && ln -s ${src_graphengine} <SOURCE_DIR>/graphengine"
     COMMAND ${EXEC} <SOURCE_DIR>/autogen.sh && CONF=1 <SOURCE_DIR>/configure
         --host=${TARGET_ARCH}
         --prefix=${MINGW_INSTALL_PREFIX}
         --disable-shared
-    BUILD_COMMAND ${MAKE}
-    INSTALL_COMMAND ${MAKE} install
+    BUILD_COMMAND bash -c "rm -rf <SOURCE_DIR>/graphengine && ln -s ${src_graphengine} <SOURCE_DIR>/graphengine"
+    COMMAND ${MAKE}
+    INSTALL_COMMAND bash -c "rm -rf <SOURCE_DIR>/graphengine && ln -s ${src_graphengine} <SOURCE_DIR>/graphengine"
+    COMMAND ${MAKE} install
             # .git yoksa git YUKARI yuruyup workspace deposunu bulur ve
             # clean -dfx TUM izlenmeyenleri (src_packages dahil) supurur.
             # graphengine agacinin bos kalmasinin muhtemel sebebi bu
