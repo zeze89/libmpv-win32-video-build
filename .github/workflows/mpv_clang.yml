@@ -132,7 +132,11 @@ jobs:
           rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-configure
           rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-build
           rm -f build_$BIT/packages/libarchive-prefix/src/libarchive-stamp/libarchive-install
+          # Klasor SILINMEZ, bosaltilir: yaratan mkdir adiminin damgasi
+          # gecerli kalinca EP yeniden yaratmiyor ve configure cd edemiyor
+          # ("No such file or directory", 32646291554).
           rm -rf build_$BIT/packages/libarchive-prefix/src/libarchive-build
+          mkdir -p build_$BIT/packages/libarchive-prefix/src/libarchive-build
 
       - name: Building mpv
         id: build_mpv_step
