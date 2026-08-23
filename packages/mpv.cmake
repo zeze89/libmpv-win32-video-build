@@ -57,10 +57,13 @@ ExternalProject_Add(mpv
 ExternalProject_Add_Step(mpv strip-binary
     DEPENDEES build
     ${mpv_add_debuglink}
-    # Bu fork yalniz libmpv uretiyor (media_kit); CLI ikilileri yok ve strip
+    # Bu fork yalniz libmpv uretiyor (media_kit); CLI ikilileri olmayabilir.
+    # UC TUZAK olculdu: COMMAND ";" VE "||" operatorlerinde bolunuyor, EXEC
+    # eval-i bash -c tirnaklarini parcaliyor, arac ikilileri yalniz EXEC
+    # PATH'inde. Guvenli bicim: bash -c + MUTLAK arac yolu.
     # onlara takiliyordu (32648699580). Varsa soy, yoksa gec; dll zorunlu.
-    COMMAND ${EXEC} test ! -f <BINARY_DIR>/mpv.exe || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.exe
-    COMMAND ${EXEC} test ! -f <BINARY_DIR>/mpv.com || ${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.com
+    COMMAND bash -c "[ ! -f <BINARY_DIR>/mpv.exe ] || ${CMAKE_INSTALL_PREFIX}/bin/${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.exe"
+    COMMAND bash -c "[ ! -f <BINARY_DIR>/mpv.com ] || ${CMAKE_INSTALL_PREFIX}/bin/${TARGET_ARCH}-strip -s <BINARY_DIR>/mpv.com"
     COMMAND ${EXEC} ${TARGET_ARCH}-strip -s <BINARY_DIR>/libmpv-2.dll
     COMMENT "Stripping mpv binaries"
 )
