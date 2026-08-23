@@ -18,7 +18,10 @@ function(cleanup _name _last_step)
         if(_build_in_source)
             set(remove_cmd "git -C <SOURCE_DIR> clean -dfx")
         else()
-            set(remove_cmd "rm -rf <BINARY_DIR>/* && git -C <SOURCE_DIR> clean -df")
+            # upstream e43e4a860: rm -rf dir/* icin glob acilmiyor (exec
+            # sarmalayicisi) ve rm "failed to remove ./" ile dusuyordu
+            # (32644286761, mbedtls-postremovebuild). find guvenli.
+            set(remove_cmd "find <BINARY_DIR> -mindepth 1 -delete && git -C <SOURCE_DIR> clean -df")
         endif()
         # KAYNAK DIZINI HENUZ KLONLANMAMISSA ATLA (Nightmare TV, 2026-08-22).
         #
