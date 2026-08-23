@@ -141,7 +141,9 @@ jobs:
           # damgalar gecerli kaldikca prefix'te yasamaya devam ederdi
           # (libarchive dersi). Cargo bayrak degisimini kendi parmak izinden
           # gorup sifirdan derler, damgalari dusurmek yeterli.
-          for p in libdovi rav1e; do
+          # angle-headers: eski basliklar prefix'e kopyali; pin degisince
+          # install yeniden kosmali ki dogru basliklar prefix'e insin.
+          for p in libdovi rav1e angle-headers; do
             rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-configure
             rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-build
             rm -f build_$BIT/packages/$p-prefix/src/$p-stamp/$p-install
