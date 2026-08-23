@@ -150,6 +150,14 @@ jobs:
           echo "--- libzimg stamp:"; ls build_$BIT/packages/libzimg-prefix/src/libzimg-stamp/ 2>&1 | head -20
           echo "--- graphengine stamp:"; ls build_$BIT/packages/graphengine-prefix/src/graphengine-stamp/ 2>&1 | head -20
 
+      # ffmpeg configure arizalari icin gercek kanit ffbuild/config.log
+      - name: Probe ffmpeg config.log
+        if: failure()
+        run: |
+          tail -n 60 build_$BIT/packages/ffmpeg-prefix/src/ffmpeg-build/ffbuild/config.log 2>&1 | tail -60
+          echo "--- pkgconfig dizini:"; ls build_$BIT/x86_64-w64-mingw32/lib/pkgconfig 2>&1 | head -40
+          echo "--- libplacebo.pc:"; cat build_$BIT/x86_64-w64-mingw32/lib/pkgconfig/libplacebo.pc 2>&1 | head -20
+
       - name: Dump failed package logs
         if: failure()
         run: |

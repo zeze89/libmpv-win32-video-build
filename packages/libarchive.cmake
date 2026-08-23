@@ -27,7 +27,10 @@ ExternalProject_Add(libarchive
         -DENABLE_LZO=ON
         -DENABLE_LZMA=ON
         -DENABLE_CPIO=OFF
-        -DENABLE_CNG=OFF
+        # ENABLE_CNG=OFF kaldirildi (upstream ile hizali, 2026-08-23):
+        # libarchive master BCryptGenRandom cagiriyor; CNG kapaliyken cmake
+        # bcrypt kutuphanesini baglamiyor ve bsdunzip.exe "undefined symbol:
+        # BCryptOpenAlgorithmProvider" ile dusuyordu (32645760249).
         -DENABLE_CAT=OFF
         -DENABLE_TAR=OFF
         -DENABLE_WERROR=OFF
