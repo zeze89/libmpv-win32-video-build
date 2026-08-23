@@ -17,7 +17,7 @@ elseif(COMPILER_TOOLCHAIN STREQUAL "clang")
     set(ffmpeg_extra_libs "-lc++")
     set(ffmpeg_hardcoded_tables "--enable-hardcoded-tables")
     set(mpv_lto_mode "-Db_lto_mode=thin")
-    set(mpv_copy_debug COMMAND ${CMAKE_COMMAND} -E copy <BINARY_DIR>/mpv.pdb ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug/mpv.pdb)
+    set(mpv_copy_debug COMMAND bash -c "[ ! -f <BINARY_DIR>/mpv.pdb ] || cp <BINARY_DIR>/mpv.pdb ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug/mpv.pdb")
     if(CLANG_PACKAGES_LTO)
         # Rust LTO bitcode KAPALI (2026-08-23): konteynerin rustc 1.98 LLVM 22
         # bitcode gomuyor, sabitli lld 17 okuyamiyor ("Unknown attribute kind
