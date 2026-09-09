@@ -6,7 +6,10 @@ ExternalProject_Add(llvm
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !*/test !/lldb !/mlir !/clang-tools-extra !/mlir !/polly !/bolt !/flang"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG release/22.x
+    # Nightmare TV (2026-09-09): dal adiyla checkout CI kabinda (git 2.55) release/17.x ucuna
+    # (6009708b43, clang 17.0.6) oturdu; PGO egitimi profil uretmedi, llvm-profdata merge dustu.
+    # release/22.x ucu acik hash ile sabitlendi (ca7933e47d, 2026-06-15). Guncellerken hash yenile.
+    GIT_TAG ca7933e47d3a3451d81e72ac174dcb5aa28b59d1
     LIST_SEPARATOR ,
     CONFIGURE_COMMAND ${EXEC} CONF=1 PATH=$O_PATH cmake -H<SOURCE_DIR>/llvm -B<BINARY_DIR>
         -G Ninja
