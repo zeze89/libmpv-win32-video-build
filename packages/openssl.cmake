@@ -59,7 +59,10 @@ ExternalProject_Add(openssl
         no-dh
         no-bf
         zlib
-    BUILD_COMMAND ${MAKE} build_sw
+    # OpenSSL master: make, Configure'u kendisi yeniden calistirip "Please run the
+    # same make command again" ile 1 donuyor (2026-09-10, run 34418403055).
+    # Ikinci make temiz gecer; tek denemede paket dusuyordu.
+    BUILD_COMMAND ${EXEC} sh -c "make -j${MAKEJOBS} build_sw || make -j${MAKEJOBS} build_sw"
     INSTALL_COMMAND ${MAKE} install_sw
     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
 )
