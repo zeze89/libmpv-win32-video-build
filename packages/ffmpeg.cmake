@@ -17,7 +17,6 @@ ExternalProject_Add(ffmpeg
         opus
         speex
         vorbis
-        libvpl
         libxml2
         libplacebo
         shaderc
@@ -89,8 +88,7 @@ ExternalProject_Add(ffmpeg
         --disable-libjxl
         --enable-libdav1d
         --enable-libplacebo
-
-        --enable-libvpl
+        # libvpl (Intel QSV) cikarildi: clang 22 ile derlenmiyor, Nightmare d3d11va kullanir (2026-09-10)
         --enable-libbs2b
         --enable-libwebp
         --enable-libzimg
