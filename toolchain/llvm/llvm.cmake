@@ -6,9 +6,10 @@ ExternalProject_Add(llvm
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !*/test !/lldb !/mlir !/clang-tools-extra !/mlir !/polly !/bolt !/flang"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    # Nightmare TV (2026-09-09): release/22.x ucu acik hash ile sabit (ca7933e47d, 2026-06-15);
-    # dal ucu kayarsa derleme sessizce degismesin. Guncellerken hash yenile.
-    GIT_TAG ca7933e47d3a3451d81e72ac174dcb5aa28b59d1
+    # Nightmare TV (2026-09-09): DAL ADI SART. Hash sabitlemek reset_head.sh'i
+    # kirar (git rev-parse @{u} -> 'HEAD does not point to a branch', 128).
+    # Ilk 17.x kazasinin sebebi is akisinin master'i cekmesiydi, cozuldu.
+    GIT_TAG release/22.x
     LIST_SEPARATOR ,
     CONFIGURE_COMMAND ${EXEC} CONF=1 PATH=$O_PATH cmake -H<SOURCE_DIR>/llvm -B<BINARY_DIR>
         -G Ninja
