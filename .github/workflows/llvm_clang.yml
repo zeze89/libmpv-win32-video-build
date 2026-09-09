@@ -31,7 +31,7 @@ jobs:
 
       - uses: actions/checkout@main
         with:
-          ref: master
+          ref: ${{ github.ref_name }}  # Nightmare TV: calistirilan dal (win-v4); master eski taban
 
       - name: Loading clang root
         id: clang_root_cache
