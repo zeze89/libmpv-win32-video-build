@@ -20,7 +20,11 @@ elseif(COMPILER_TOOLCHAIN STREQUAL "clang")
                                             COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/VapourSynth.lib ${MINGW_INSTALL_PREFIX}/lib/VapourSynth.lib)
     set(ffmpeg_extra_libs "-lc++")
     set(mpv_lto_mode "-Db_lto_mode=thin")
-    set(mpv_copy_debug COMMAND ${CMAKE_COMMAND} -E copy <BINARY_DIR>/mpv.pdb ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug/mpv.pdb)
+    # PDB VARSA kopyala (2026-09-10, run 34421994789): LGPL/libmpv yapilandirmasi mpv.pdb
+    # uretmiyor ve tek eksik dosya tum paketlemeyi dusuruyordu. mpv-debug dizini her
+    # durumda olussun ki copy-package-dir'deki mv kirilmasin.
+    set(mpv_copy_debug COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug
+                       COMMAND bash -c "for f in <BINARY_DIR>/mpv.pdb <BINARY_DIR>/libmpv-2.pdb; do [ -f \"$f\" ] && cp \"$f\" ${CMAKE_CURRENT_BINARY_DIR}/mpv-debug/; done; true")
     if(CLANG_PACKAGES_LTO)
         set(cargo_lto_rustflags "CARGO_PROFILE_RELEASE_LTO=thin
                                  RUSTFLAGS='-C linker-plugin-lto -C embed-bitcode -C lto=thin'")
