@@ -52,7 +52,7 @@ ExternalProject_Add(ffmpeg
         --disable-protocols
         --disable-filters
         --disable-doc
-        --disable-postproc
+        # --disable-postproc: FFmpeg master libpostproc'u kaldirdi (2026-09-10, run 34419953653)
         --disable-programs
         --disable-gray
         --disable-swscale-alpha
@@ -96,7 +96,7 @@ ExternalProject_Add(ffmpeg
         --enable-libsoxr
         --enable-libspeex
         --enable-libmysofa
-        --enable-libshaderc
+        # --enable-libshaderc: master configure'da yok, cikarildi (2026-09-10)
         --enable-libfribidi
         --enable-libfreetype
 
