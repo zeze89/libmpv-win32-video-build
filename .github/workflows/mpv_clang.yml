@@ -123,7 +123,12 @@ jobs:
       - name: Copying ffmpeg
         run: |
           hash=$(git -C src_packages/ffmpeg rev-parse --short HEAD)
-          7z a -m0=lzma2 -mx=9 -ms=on release_$BIT/ffmpeg-${{ env.arch }}${{ env.x86_64_level }}-git-$hash.7z ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe
+          # Nightmare TV: ffmpeg --disable-programs ile derleniyor (yalniz libmpv gerekli); ffmpeg.exe yoksa atla
+          if [ -f ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe ]; then
+            7z a -m0=lzma2 -mx=9 -ms=on release_$BIT/ffmpeg-${{ env.arch }}${{ env.x86_64_level }}-git-$hash.7z ./build_$BIT/$BIT-w64-mingw32/bin/ffmpeg.exe
+          else
+            echo "ffmpeg.exe yok (--disable-programs), paketleme atlandi"
+          fi
 
       - name: Collecting logs
         if: always()
