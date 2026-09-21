@@ -265,6 +265,47 @@ ExternalProject_Add(ffmpeg
         # Ikisi de LGPL 2.1+, yani --disable-gpl / -Dgpl=false duruşu bozulmaz.
         --enable-filter=yadif
         --enable-filter=bwdif
+        # ALTYAPI FILTRELERI — BUNLAR OLMADAN YUKARIDAKI IKISI CALISMAZ.
+        #
+        # 2026-08-23te olculdu, 2026-09-21de AYNI ARIZA GERI GELDI.
+        # yadif/bwdif tek basina YETMIYOR: lavfi grafigi kurulurken bicim
+        # donusumu icin scale/format gerekiyor. Yoklugunda mpv soyle der:
+        #   ffmpeg: 'scale' filter not present, cannot convert formats.
+        #   ffmpeg: src: nv12   (dxva2 donanim cozumunun cikisi)
+        #   lavfi: failed to configure the filter graph
+        #   vf: Disabling filter bwdif.00 because it has failed.
+        # Yani ayar duruyor, filtre ikilide GORUNUYOR, grafik hic kurulmuyor.
+        # Belirti: kayan yazida yatay ikizlenme (tarak), vfps=25 sabit.
+        #
+        # KURAL: ikilide filtre adinin gecmesi kanit degildir. Yeni bir
+        # win-vN dali acilirken bu blok TASINMAK ZORUNDA; win-v4 upstreamden
+        # sifirdan dallandi, blok tasinmadi ve ariza aynen geri geldi.
+        --enable-filter=scale
+        --enable-filter=format
+        --enable-filter=null
+        --enable-filter=copy
+        --enable-filter=setpts
+        --enable-filter=aformat
+        --enable-filter=aresample
+        --enable-filter=anull
+        --enable-filter=asetpts
+        # GORUNTU FILTRELERI: dusuk bit hizli IPTVde gurultu ve bantlanma
+        # var. atadenoise = uyarlamali zamansal denoise (ucuz, detay korur),
+        # unsharp = keskinlestirme, gradfun = bantlanma.
+        # hqdn3d BILEREK YOK: ffmpegde GPL, bizim derleme --disable-gpl;
+        # beyaz listeye yazmak sessizce etkisiz kalir.
+        # nlmeans BILEREK YOK: kalitesi iyi ama 1080p50 canlida yetismez.
+        --enable-filter=atadenoise
+        --enable-filter=unsharp
+        --enable-filter=gradfun
+        # SES FILTRELERI: iki ayar bunlar olmadan olu kaliyor.
+        #  - "Akilli ses > Gece" af=lavfi=[dynaudnorm=...] yaziyor,
+        #    mpv "No such filter: 'dynaudnorm'" deyip grafigi kuramiyor.
+        #  - "Kanal Sesi Dengeleyici" af=loudnorm=... yaziyor,
+        #    mpv "Option af: loudnorm doesn't exist" ile reddediyor.
+        # Ikisi de LGPL 2.1+ (af_dynaudnorm.c / af_loudnorm.c kontrol edildi).
+        --enable-filter=dynaudnorm
+        --enable-filter=loudnorm
         # Muxer: stok derleme --disable-muxers ve tek bir --enable-muxer= yok.
         # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
         # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
