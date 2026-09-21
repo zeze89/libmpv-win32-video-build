@@ -68,6 +68,35 @@ jobs:
         with:
           ref: ${{ github.ref_name }}  # Nightmare TV: calistirilan dal (win-v4); master eski taban
 
+      # Nightmare TV: the filter whitelist must survive a rebranch.
+      #
+      # win-v4 was branched from a fresh upstream base and every
+      # --enable-filter= line from the win-v3 lineage was lost. The
+      # build succeeded, the binary still contained the string "bwdif",
+      # and four features shipped dead for 11 days: deinterlacing,
+      # noise reduction, picture tuning and audio levelling.
+      #
+      # A comment inside ffmpeg.cmake could not prevent that, because a
+      # rebranch replaces that file. This step can: it runs before any
+      # compilation, so a lost list costs one red minute, not a release.
+      - name: Nightmare filter whitelist must be present
+        run: |
+          missing=""
+          for f in scale format null copy setpts aformat aresample \
+                   anull asetpts atadenoise unsharp gradfun \
+                   dynaudnorm loudnorm; do
+            grep -q -- "--enable-filter=$f\b" packages/ffmpeg.cmake \
+              || missing="$missing $f"
+          done
+          if [ -n "$missing" ]; then
+            echo "packages/ffmpeg.cmake is missing:$missing"
+            echo "These are not optional extras. Without scale/format the"
+            echo "lavfi graph cannot convert nv12 and mpv disables the"
+            echo "deinterlacer outright. Restore the block before building."
+            exit 1
+          fi
+          echo "filter whitelist: all 14 present"
+
       - name: Loading clang sysroot cache
         uses: actions/cache/restore@main
         with:
