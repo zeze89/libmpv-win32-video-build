@@ -1,0 +1,215 @@
+From ce61b74f55199c2bd724a8a9edc6ab6b446ad3e2 Mon Sep 17 00:00:00 2001
+From: zeze89 <zz89842015@gmail.com>
+Date: Mon, 5 Oct 2026 02:43:13 +0300
+Subject: [PATCH] vf_d3d11vpp: create own D3D11 device when no hwdec device is
+ available
+
+The render API on OpenGL (ANGLE) has no D3D11 interop, so hwdec_devs
+never holds a D3D11 device and the filter could not be created at all
+(hwdec=d3d11va-copy delivers frames in system memory).
+
+Fall back to a filter-owned D3D11VA device created by libavutil
+(D3D11_CREATE_DEVICE_VIDEO_SUPPORT, multithread protected; the NVIDIA
+or Intel adapter for the vendor scaling modes), accept NV12/P010
+software frames and upload them to that device before processing.
+Behaviour is unchanged when a hwdec device is available.
+---
+ video/filter/vf_d3d11vpp.c | 118 +++++++++++++++++++++++++++++++------
+ 1 file changed, 100 insertions(+), 18 deletions(-)
+
+diff --git a/video/filter/vf_d3d11vpp.c b/video/filter/vf_d3d11vpp.c
+index 8dba38a47..381b17b57 100644
+--- a/video/filter/vf_d3d11vpp.c
++++ b/video/filter/vf_d3d11vpp.c
+@@ -19,6 +19,7 @@
+ #include <windows.h>
+ #include <d3d11.h>
+ 
++#include <libavutil/dict.h>
+ #include <libavutil/hwcontext.h>
+ #include <libavutil/hwcontext_d3d11va.h>
+ 
+@@ -102,6 +103,11 @@ struct priv {
+     AVBufferRef *av_device_ref;
+     AVBufferRef *hw_pool;
+ 
++    // Set when no hwdec device was available and the filter created its own
++    // D3D11 device. Software input frames are then uploaded via in_pool.
++    bool own_device;
++    AVBufferRef *in_pool;
++
+     struct mp_refqueue *queue;
+ };
+ 
+@@ -371,7 +377,7 @@ static struct mp_image *render(struct mp_filter *vf)
+     HRESULT hr;
+     ID3D11VideoProcessorInputView *in_view = NULL;
+     ID3D11VideoProcessorOutputView *out_view = NULL;
+-    struct mp_image *in = NULL, *out = NULL;
++    struct mp_image *in = NULL, *out = NULL, *up = NULL;
+     out = alloc_out(vf);
+     if (!out) {
+         MP_WARN(vf, "failed to allocate frame\n");
+@@ -383,8 +389,26 @@ static struct mp_image *render(struct mp_filter *vf)
+     in = mp_refqueue_get(p->queue, 0);
+     if (!in)
+         goto cleanup;
+-    ID3D11Texture2D *d3d_tex = (void *)in->planes[0];
+-    int d3d_subindex = (intptr_t)in->planes[1];
++    struct mp_image *src = in;
++    if (p->own_device && !IMGFMT_IS_HWACCEL(in->imgfmt)) {
++        // Software frame: upload it to the filter's own D3D11 device.
++        if (!mp_update_av_hw_frames_pool(&p->in_pool, p->av_device_ref,
++                                         IMGFMT_D3D11, in->imgfmt,
++                                         MP_ALIGN_UP(in->w, 2),
++                                         MP_ALIGN_UP(in->h, 2), false))
++        {
++            MP_ERR(vf, "Failed to create upload pool\n");
++            goto cleanup;
++        }
++        up = mp_av_pool_image_hw_upload(p->in_pool, in);
++        if (!up) {
++            MP_ERR(vf, "Failed to upload frame\n");
++            goto cleanup;
++        }
++        src = up;
++    }
++    ID3D11Texture2D *d3d_tex = (void *)src->planes[0];
++    int d3d_subindex = (intptr_t)src->planes[1];
+ 
+     mp_image_copy_attributes(out, in);
+     // mp_image_copy_attributes overwrites the height and width
+@@ -472,6 +496,7 @@ cleanup:
+         ID3D11VideoProcessorInputView_Release(in_view);
+     if (out_view)
+         ID3D11VideoProcessorOutputView_Release(out_view);
++    talloc_free(up);
+     if (res < 0)
+         TA_FREEP(&out);
+     return out;
+@@ -488,6 +513,11 @@ static void vf_d3d11vpp_process(struct mp_filter *vf)
+         destroy_video_proc(vf);
+ 
+         p->params = in_fmt->params;
++        if (p->own_device && !IMGFMT_IS_HWACCEL(p->params.imgfmt)) {
++            // Software input is uploaded in render(); describe it as D3D11.
++            p->params.hw_subfmt = p->params.imgfmt;
++            p->params.imgfmt = IMGFMT_D3D11;
++        }
+         p->out_params = p->params;
+         p->out_params.w = (int)(p->opts->scale * p->params.w);
+         p->out_params.w += p->out_params.w % 2 != 0;
+@@ -532,6 +562,7 @@ static void uninit(struct mp_filter *vf)
+     flush_frames(vf);
+     talloc_free(p->queue);
+     av_buffer_unref(&p->hw_pool);
++    av_buffer_unref(&p->in_pool);
+     av_buffer_unref(&p->av_device_ref);
+ 
+     if (p->video_ctx)
+@@ -547,6 +578,47 @@ static void uninit(struct mp_filter *vf)
+         ID3D11Device_Release(p->vo_dev);
+ }
+ 
++// Used when the VO/render API cannot provide a D3D11 hwdec device (e.g. the
++// OpenGL render API without a D3D11 interop, with hwdec=d3d11va-copy). The
++// device is created by libavutil: D3D11_CREATE_DEVICE_VIDEO_SUPPORT and
++// multithread protection, on the vendor's adapter for vendor scaling modes.
++static bool create_own_device(struct mp_filter *vf)
++{
++    struct priv *p = vf->priv;
++    const char *vendor = NULL;
++    if (p->opts->scaling_mode == SCALING_NVIDIA_RTX || p->opts->nvidia_true_hdr)
++        vendor = "0x10de";
++    else if (p->opts->scaling_mode == SCALING_INTEL_VSR)
++        vendor = "0x8086";
++
++    int ret = -1;
++    if (vendor) {
++        AVDictionary *dict = NULL;
++        av_dict_set(&dict, "SHADER", "1", 0);
++        av_dict_set(&dict, "vendor_id", vendor, 0);
++        ret = av_hwdevice_ctx_create(&p->av_device_ref, AV_HWDEVICE_TYPE_D3D11VA,
++                                     NULL, dict, 0);
++        av_dict_free(&dict);
++    }
++    if (ret < 0) {
++        AVDictionary *dict = NULL;
++        av_dict_set(&dict, "SHADER", "1", 0);
++        ret = av_hwdevice_ctx_create(&p->av_device_ref, AV_HWDEVICE_TYPE_D3D11VA,
++                                     NULL, dict, 0);
++        av_dict_free(&dict);
++        vendor = NULL;
++    }
++    if (ret < 0 || !p->av_device_ref) {
++        MP_ERR(vf, "d3d11vpp: no hwdec device and creating own D3D11 device failed\n");
++        return false;
++    }
++
++    MP_INFO(vf, "d3d11vpp: no hwdec device, using own D3D11 device (%s)\n",
++            vendor ? vendor : "default adapter");
++    p->own_device = true;
++    return true;
++}
++
+ static const struct mp_filter_info vf_d3d11vpp_filter = {
+     .name = "d3d11vpp",
+     .process = vf_d3d11vpp_process,
+@@ -580,21 +652,24 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
+     p->queue = mp_refqueue_alloc(f);
+ 
+     struct mp_stream_info *info = mp_filter_find_stream_info(f);
+-    if (!info || !info->hwdec_devs)
+-        goto fail;
+-
+-    struct hwdec_imgfmt_request params = {
+-        .imgfmt = IMGFMT_D3D11,
+-        .probing = false,
+-    };
+-    hwdec_devices_request_for_img_fmt(info->hwdec_devs, &params);
+-
+-    struct mp_hwdec_ctx *hwctx =
+-        hwdec_devices_get_by_imgfmt_and_type(info->hwdec_devs, IMGFMT_D3D11,
+-                                             AV_HWDEVICE_TYPE_D3D11VA);
+-    if (!hwctx || !hwctx->av_device_ref)
++    struct mp_hwdec_ctx *hwctx = NULL;
++    if (info && info->hwdec_devs) {
++        struct hwdec_imgfmt_request params = {
++            .imgfmt = IMGFMT_D3D11,
++            .probing = false,
++        };
++        hwdec_devices_request_for_img_fmt(info->hwdec_devs, &params);
++
++        hwctx = hwdec_devices_get_by_imgfmt_and_type(info->hwdec_devs,
++                                                     IMGFMT_D3D11,
++                                                     AV_HWDEVICE_TYPE_D3D11VA);
++    }
++    if (hwctx && hwctx->av_device_ref) {
++        p->av_device_ref = av_buffer_ref(hwctx->av_device_ref);
++    } else if (!options || !create_own_device(f)) {
++        // (options == NULL is vf_d3d11_create_outconv(); never fall back there)
+         goto fail;
+-    p->av_device_ref = av_buffer_ref(hwctx->av_device_ref);
++    }
+     AVHWDeviceContext *avhwctx = (void *)p->av_device_ref->data;
+     AVD3D11VADeviceContext *d3dctx = avhwctx->hwctx;
+ 
+@@ -616,7 +691,14 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
+     if (FAILED(hr))
+         goto fail;
+ 
+-    mp_refqueue_add_in_format(p->queue, IMGFMT_D3D11, 0);
++    if (p->own_device) {
++        // Our device is not known to hwdec_devs, so the generic hwupload
++        // cannot target it. Take software frames and upload them in render().
++        mp_refqueue_add_in_format(p->queue, IMGFMT_NV12, 0);
++        mp_refqueue_add_in_format(p->queue, IMGFMT_P010, 0);
++    } else {
++        mp_refqueue_add_in_format(p->queue, IMGFMT_D3D11, 0);
++    }
+ 
+     mp_refqueue_set_refs(p->queue, 0, 0);
+     mp_refqueue_set_mode(p->queue,
+-- 
+2.53.0.windows.3
+
