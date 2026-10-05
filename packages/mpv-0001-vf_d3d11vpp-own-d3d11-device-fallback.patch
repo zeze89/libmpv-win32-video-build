@@ -1,4 +1,4 @@
-From ce61b74f55199c2bd724a8a9edc6ab6b446ad3e2 Mon Sep 17 00:00:00 2001
+From 5ecccb0d10ce34f493373f06e139a37cf611433c Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
 Date: Mon, 5 Oct 2026 02:43:13 +0300
 Subject: [PATCH] vf_d3d11vpp: create own D3D11 device when no hwdec device is
@@ -14,11 +14,11 @@ or Intel adapter for the vendor scaling modes), accept NV12/P010
 software frames and upload them to that device before processing.
 Behaviour is unchanged when a hwdec device is available.
 ---
- video/filter/vf_d3d11vpp.c | 118 +++++++++++++++++++++++++++++++------
- 1 file changed, 100 insertions(+), 18 deletions(-)
+ video/filter/vf_d3d11vpp.c | 117 +++++++++++++++++++++++++++++++------
+ 1 file changed, 99 insertions(+), 18 deletions(-)
 
 diff --git a/video/filter/vf_d3d11vpp.c b/video/filter/vf_d3d11vpp.c
-index 8dba38a47..381b17b57 100644
+index 8dba38a47..16684a03c 100644
 --- a/video/filter/vf_d3d11vpp.c
 +++ b/video/filter/vf_d3d11vpp.c
 @@ -19,6 +19,7 @@
@@ -107,7 +107,7 @@ index 8dba38a47..381b17b57 100644
      av_buffer_unref(&p->av_device_ref);
  
      if (p->video_ctx)
-@@ -547,6 +578,47 @@ static void uninit(struct mp_filter *vf)
+@@ -547,6 +578,46 @@ static void uninit(struct mp_filter *vf)
          ID3D11Device_Release(p->vo_dev);
  }
  
@@ -124,21 +124,20 @@ index 8dba38a47..381b17b57 100644
 +    else if (p->opts->scaling_mode == SCALING_INTEL_VSR)
 +        vendor = "0x8086";
 +
++    // No device-wide bind flags: an NV12 texture with only
++    // D3D11_BIND_SHADER_RESOURCE is rejected as video processor input
++    // (E_INVALIDARG, measured on NVIDIA). Upload textures keep BindFlags=0.
 +    int ret = -1;
 +    if (vendor) {
 +        AVDictionary *dict = NULL;
-+        av_dict_set(&dict, "SHADER", "1", 0);
 +        av_dict_set(&dict, "vendor_id", vendor, 0);
 +        ret = av_hwdevice_ctx_create(&p->av_device_ref, AV_HWDEVICE_TYPE_D3D11VA,
 +                                     NULL, dict, 0);
 +        av_dict_free(&dict);
 +    }
 +    if (ret < 0) {
-+        AVDictionary *dict = NULL;
-+        av_dict_set(&dict, "SHADER", "1", 0);
 +        ret = av_hwdevice_ctx_create(&p->av_device_ref, AV_HWDEVICE_TYPE_D3D11VA,
-+                                     NULL, dict, 0);
-+        av_dict_free(&dict);
++                                     NULL, NULL, 0);
 +        vendor = NULL;
 +    }
 +    if (ret < 0 || !p->av_device_ref) {
@@ -155,7 +154,7 @@ index 8dba38a47..381b17b57 100644
  static const struct mp_filter_info vf_d3d11vpp_filter = {
      .name = "d3d11vpp",
      .process = vf_d3d11vpp_process,
-@@ -580,21 +652,24 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
+@@ -580,21 +651,24 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
      p->queue = mp_refqueue_alloc(f);
  
      struct mp_stream_info *info = mp_filter_find_stream_info(f);
@@ -194,7 +193,7 @@ index 8dba38a47..381b17b57 100644
      AVHWDeviceContext *avhwctx = (void *)p->av_device_ref->data;
      AVD3D11VADeviceContext *d3dctx = avhwctx->hwctx;
  
-@@ -616,7 +691,14 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
+@@ -616,7 +690,14 @@ static struct mp_filter *vf_d3d11vpp_create(struct mp_filter *parent,
      if (FAILED(hr))
          goto fail;
  
