@@ -20,12 +20,21 @@ ExternalProject_Add(ffmpeg
         libxml2
         libplacebo
         shaderc
+        vulkan-header
+        spirv-headers
         dav1d
         mbedtls
     GIT_REPOSITORY https://github.com/FFmpeg/FFmpeg.git
     SOURCE_DIR ${SOURCE_LOCATION}
-    GIT_TAG 705286a8a7a8f9118465b2bd83f99a6f066dcbbc  # win-v4: FFmpeg master 705286a (upstream tarifin yamalari master icin)
+    # win-v7-fruc: FFmpeg master f0c2c00a62 (2026-10-04). fruc_vulkan (NVIDIA
+    # optical flow ara kare) master'a d20bae84 (2026-08-30) ile girdi.
+    # Eski pin: 705286a (win-v4..win-v6).
+    GIT_TAG f0c2c00a629ee42875a3ded124e2f5722159068c
     UPDATE_COMMAND ""
+    # Onbellekteki kaynak agaci eski pinde kalir (hash pininde reset_head.sh
+    # HEAD'i oynatmaz). Pine acikca don, yoksa eski FFmpeg sessizce derlenir.
+    PATCH_COMMAND ${EXEC} bash -c "git cat-file -e f0c2c00a629ee42875a3ded124e2f5722159068c 2>/dev/null || git fetch --filter=tree:0 origin f0c2c00a629ee42875a3ded124e2f5722159068c"
+          COMMAND ${EXEC} git reset --hard -q f0c2c00a629ee42875a3ded124e2f5722159068c
     CONFIGURE_COMMAND ${EXEC} CONF=1 <SOURCE_DIR>/configure
         --cross-prefix=${TARGET_ARCH}-
         --prefix=${MINGW_INSTALL_PREFIX}
@@ -40,7 +49,9 @@ ExternalProject_Add(ffmpeg
         --enable-version3
         --enable-static
         --disable-shared
-        --disable-vulkan
+        # win-v7-fruc: Vulkan acik (fruc_vulkan icin). FFmpeg vulkan-1.dll'i
+        # calisma aninda yukler; derlemede yalniz basliklar ve glslc gerekir.
+        --enable-vulkan
         --disable-iconv
         --enable-stripping
 
@@ -310,6 +321,13 @@ ExternalProject_Add(ffmpeg
         # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
         # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
         # `stream-record` "Output format not found" deyip dosya uretmiyor.
+        # RTX ARA KARE (win-v7-fruc, laboratuvar): NVIDIA optical flow ile
+        # gercek zamanli kare hizi artirma. hwupload/hwdownload sistem
+        # bellegindeki kareyi (d3d11va-copy) Vulkan'a tasir ve geri alir.
+        # Vulkan cihazi mpv f_lavfi yamasiyla (mpv-0002) acilir.
+        --enable-filter=hwupload
+        --enable-filter=hwdownload
+        --enable-filter=fruc_vulkan
         --enable-muxer=spdif
         --enable-muxer=mpegts
         --enable-muxer=matroska

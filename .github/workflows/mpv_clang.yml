@@ -97,6 +97,30 @@ jobs:
           fi
           echo "filter whitelist: all 14 present"
 
+      # win-v7-fruc: FFmpeg master compiles its Vulkan shaders (fruc_vulkan)
+      # at build time with a HOST glslc/glslangValidator. Without one the
+      # configure step silently disables spirv_compiler and every Vulkan
+      # filter. Pinned Khronos release, sha256 from the release metadata.
+      - name: Host GLSL compiler for FFmpeg Vulkan filters
+        run: |
+          if command -v glslc >/dev/null 2>&1 || command -v glslangValidator >/dev/null 2>&1; then
+            echo "host GLSL compiler already present"
+          else
+            url=https://github.com/KhronosGroup/glslang/releases/download/16.6.0/glslang-16.6.0-linux-x86_64-release.tar.gz
+            want=2c34071f56ecf39d16233294d3739cf43f981fd39080f2fd9dccb782101191ce
+            curl -fsSL --retry 5 -o /tmp/glslang.tgz "$url"
+            got=$(sha256sum /tmp/glslang.tgz | cut -d' ' -f1)
+            if [ "$got" != "$want" ]; then echo "glslang sha256 mismatch: $got"; exit 1; fi
+            mkdir -p /opt/glslang
+            tar -xzf /tmp/glslang.tgz -C /opt/glslang
+            bin=$(find /opt/glslang -type f -name glslangValidator | head -n1)
+            if [ -z "$bin" ]; then bin=$(find /opt/glslang -type f -name glslang | head -n1); fi
+            if [ -z "$bin" ]; then find /opt/glslang | head -50; echo "no glslang binary in archive"; exit 1; fi
+            chmod +x "$bin"
+            ln -sf "$bin" /usr/local/bin/glslangValidator
+          fi
+          glslangValidator -v || glslc --version
+
       - name: Loading clang sysroot cache
         uses: actions/cache/restore@main
         with:
@@ -142,6 +166,24 @@ jobs:
           ninja -C build_$BIT update
           $MPV_TARBALL && ninja -C build_$BIT mpv-release || ninja -C build_$BIT mpv
           $MPV_TARBALL && echo "mpv_ver=$(cat build_$BIT/packages/mpv-release-prefix/VERSION)" >> $GITHUB_OUTPUT || echo "mpv_ver=UNKNOWN" >> $GITHUB_OUTPUT
+
+      # win-v7-fruc: prove the tree that was built, not the recipe.
+      - name: Nightmare fruc build gate
+        run: |
+          pin=f0c2c00a629ee42875a3ded124e2f5722159068c
+          head=$(git -C src_packages/ffmpeg rev-parse HEAD)
+          echo "ffmpeg HEAD: $head"
+          if [ "$head" != "$pin" ]; then echo "ffmpeg is not at the pin $pin"; exit 1; fi
+          git -C src_packages/mpv log --oneline -4
+          subj=$(git -C src_packages/mpv log --format=%s -4)
+          case "$subj" in *"f_lavfi: use an own Vulkan device"*) ;; *) echo "mpv-0002 patch is not applied"; exit 1;; esac
+          log=$(find build_$BIT -name "ffmpeg-configure-out.log" | head -n1)
+          echo "configure log: $log"
+          grep -n -i "vulkan\|spirv\|glsl" "$log" | head -40 || true
+          filters=$(awk '/^Enabled filters:/{f=1;next} f&&/^[[:space:]]*$/{exit} f' "$log")
+          echo "$filters"
+          case " $(echo $filters) " in *" fruc_vulkan "*) ;; *) echo "fruc_vulkan is NOT in the enabled filter list"; exit 1;; esac
+          echo "fruc_vulkan enabled"
 
       - name: Packaging mpv
         run: |

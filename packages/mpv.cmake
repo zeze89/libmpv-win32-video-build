@@ -30,7 +30,13 @@ ExternalProject_Add(mpv
     # The cached source tree keeps the previously applied patch as HEAD
     # (git am commits), so return to the pin before applying again.
     PATCH_COMMAND ${EXEC} git reset --hard -q 41f6a645068483470267271e1d09966ca3b9f413
-          COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/mpv-*.patch
+    # win-v7-fruc: patches are listed explicitly (not a glob) so that a new
+    # patch changes the patch step and a cached tree cannot skip it.
+    # mpv-0002: f_lavfi opens its own Vulkan device for *_vulkan filters
+    # (fruc_vulkan) when the render API has no hwdec device.
+          COMMAND ${EXEC} git am --3way
+                  ${CMAKE_CURRENT_SOURCE_DIR}/mpv-0001-vf_d3d11vpp-own-d3d11-device-fallback.patch
+                  ${CMAKE_CURRENT_SOURCE_DIR}/mpv-0002-f_lavfi-own-vulkan-device-fallback.patch
     CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>
         --prefix=${MINGW_INSTALL_PREFIX}
         --libdir=${MINGW_INSTALL_PREFIX}/lib

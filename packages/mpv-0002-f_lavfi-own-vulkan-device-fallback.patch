@@ -1,0 +1,151 @@
+From 46cc2b16d855bec4343655365922b9b31335eaeb Mon Sep 17 00:00:00 2001
+From: zeze89 <zz89842015@gmail.com>
+Date: Mon, 5 Oct 2026 13:09:50 +0300
+Subject: [PATCH] f_lavfi: use an own Vulkan device for Vulkan filters without
+ a hwdec device
+
+With the OpenGL render API (ANGLE) and hwdec=d3d11va-copy, hwdec_devs
+holds no usable device, so filters such as fruc_vulkan (NVIDIA optical
+flow frame interpolation) get no hw_device_ctx and the graph fails to
+configure.
+
+When the graph contains a *_vulkan filter and the VO did not provide a
+Vulkan device, create a process-wide Vulkan device with libavutil
+(NVIDIA adapter first, then the default device) and hand it to the
+filters. It is created once and reused by later graphs (channel
+changes); a failed creation is remembered and not retried. If the
+filter still cannot be configured (no NVIDIA, no optical flow), mpv
+disables that filter as before and the chain continues without it.
+Behaviour is unchanged for graphs without Vulkan filters.
+---
+ filters/f_lavfi.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
+
+diff --git a/filters/f_lavfi.c b/filters/f_lavfi.c
+index 29cb9fa33..deaf18cbe 100644
+--- a/filters/f_lavfi.c
++++ b/filters/f_lavfi.c
+@@ -28,6 +28,7 @@
+ #include <libavutil/mathematics.h>
+ #include <libavutil/rational.h>
+ #include <libavutil/error.h>
++#include <libavutil/hwcontext.h>
+ #include <libavutil/opt.h>
+ #include <libavfilter/avfilter.h>
+ #include <libavfilter/buffersink.h>
+@@ -40,6 +41,7 @@
+ #include "common/av_common.h"
+ #include "common/tags.h"
+ #include "common/msg.h"
++#include "osdep/threads.h"
+ 
+ #include "audio/format.h"
+ #include "audio/aframe.h"
+@@ -539,6 +541,62 @@ static void dump_graph(struct lavfi *c)
+     av_free(s);
+ }
+ 
++// Process-wide Vulkan device for filter graphs that contain Vulkan filters
++// (e.g. fruc_vulkan) when the VO cannot provide one. This is the case with
++// the OpenGL render API (ANGLE) and hwdec=d3d11va-copy: frames arrive in
++// system memory and hwdec_devs holds no usable device. The device is created
++// once, on first use, and shared by all later graphs (channel changes,
++// multiple players) until the process exits. A failed creation is remembered
++// so that every new graph does not retry it.
++static mp_static_mutex own_vk_lock = MP_STATIC_MUTEX_INITIALIZER;
++static AVBufferRef *own_vk_device;
++static const char *own_vk_desc;
++static bool own_vk_failed;
++
++static bool graph_needs_vulkan(AVFilterGraph *graph)
++{
++    for (unsigned n = 0; n < graph->nb_filters; n++) {
++        const AVFilter *f = graph->filters[n]->filter;
++        size_t len = f && f->name ? strlen(f->name) : 0;
++        if (len > 7 && strcmp(f->name + len - 7, "_vulkan") == 0)
++            return true;
++    }
++    return false;
++}
++
++static AVBufferRef *get_own_vulkan_device(struct lavfi *c, const char **desc)
++{
++    AVBufferRef *ref = NULL;
++    mp_mutex_lock(&own_vk_lock);
++    if (!own_vk_device && !own_vk_failed) {
++        // NVIDIA first: fruc_vulkan needs VK_NV_optical_flow. Fall back to
++        // the default device so other Vulkan filters can still work.
++        int err = av_hwdevice_ctx_create(&own_vk_device,
++                                         AV_HWDEVICE_TYPE_VULKAN,
++                                         "NVIDIA", NULL, 0);
++        own_vk_desc = "NVIDIA";
++        if (err < 0) {
++            MP_VERBOSE(c, "lavfi: no NVIDIA Vulkan device (%s), trying the "
++                       "default device\n", av_err2str(err));
++            err = av_hwdevice_ctx_create(&own_vk_device,
++                                         AV_HWDEVICE_TYPE_VULKAN,
++                                         NULL, NULL, 0);
++            own_vk_desc = "default";
++        }
++        if (err < 0) {
++            own_vk_failed = true;
++            own_vk_desc = NULL;
++            MP_ERR(c, "lavfi: no hwdec device and creating own Vulkan "
++                   "device failed: %s\n", av_err2str(err));
++        }
++    }
++    if (own_vk_device)
++        ref = av_buffer_ref(own_vk_device);
++    *desc = own_vk_desc;
++    mp_mutex_unlock(&own_vk_lock);
++    return ref;
++}
++
+ // Initialize the graph if all inputs have formats set. If it's already
+ // initialized, or can't be initialized yet, do nothing.
+ static void init_graph(struct lavfi *c)
+@@ -549,6 +607,7 @@ static void init_graph(struct lavfi *c)
+         precreate_graph(c, false);
+ 
+     if (init_pads(c)) {
++        enum AVHWDeviceType given_type = AV_HWDEVICE_TYPE_NONE;
+         struct mp_stream_info *info = mp_filter_find_stream_info(c->f);
+         if (info && info->hwdec_devs) {
+             struct mp_hwdec_ctx *hwdec_ctx = NULL;
+@@ -569,6 +628,33 @@ static void init_graph(struct lavfi *c)
+                     filter->hw_device_ctx =
+                         av_buffer_ref(hwdec_ctx->av_device_ref);
+                 }
++                given_type = ((AVHWDeviceContext *)
++                              hwdec_ctx->av_device_ref->data)->type;
++            }
++        }
++
++        // Vulkan filters need a Vulkan device. Without one they fail to
++        // configure; with our own device the rest of the chain is unchanged.
++        if (given_type != AV_HWDEVICE_TYPE_VULKAN &&
++            graph_needs_vulkan(c->graph))
++        {
++            const char *desc = NULL;
++            AVBufferRef *vk = get_own_vulkan_device(c, &desc);
++            if (vk) {
++                if (given_type == AV_HWDEVICE_TYPE_NONE) {
++                    MP_INFO(c, "lavfi: no hwdec device, using own Vulkan "
++                            "device (%s)\n", desc);
++                } else {
++                    MP_INFO(c, "lavfi: hwdec device is %s, not Vulkan; using "
++                            "own Vulkan device (%s)\n",
++                            av_hwdevice_get_type_name(given_type), desc);
++                }
++                for (int n = 0; n < c->graph->nb_filters; n++) {
++                    AVFilterContext *filter = c->graph->filters[n];
++                    av_buffer_unref(&filter->hw_device_ctx);
++                    filter->hw_device_ctx = av_buffer_ref(vk);
++                }
++                av_buffer_unref(&vk);
+             }
+         }
+ 
+-- 
+2.53.0.windows.3
+
