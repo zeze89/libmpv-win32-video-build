@@ -1,4 +1,4 @@
-From 46cc2b16d855bec4343655365922b9b31335eaeb Mon Sep 17 00:00:00 2001
+From c7315beb37536f012389a7ca20f952ca09ae9790 Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
 Date: Mon, 5 Oct 2026 13:09:50 +0300
 Subject: [PATCH] f_lavfi: use an own Vulkan device for Vulkan filters without
@@ -17,12 +17,19 @@ changes); a failed creation is remembered and not retried. If the
 filter still cannot be configured (no NVIDIA, no optical flow), mpv
 disables that filter as before and the chain continues without it.
 Behaviour is unchanged for graphs without Vulkan filters.
+
+The device is attached right after the filters are created and before
+they are initialized (graph parsing is split into the segment steps of
+avfilter_graph_parse2()), because hwupload refuses to initialize
+without a device and FFmpeg master initializes filters while parsing.
+If no Vulkan device can be created at all, the graph is replaced with
+"null" so the rest of the video chain keeps running.
 ---
- filters/f_lavfi.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 86 insertions(+)
+ filters/f_lavfi.c | 154 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 153 insertions(+), 1 deletion(-)
 
 diff --git a/filters/f_lavfi.c b/filters/f_lavfi.c
-index 29cb9fa33..deaf18cbe 100644
+index 29cb9fa33..51bcb9f18 100644
 --- a/filters/f_lavfi.c
 +++ b/filters/f_lavfi.c
 @@ -28,6 +28,7 @@
@@ -41,10 +48,10 @@ index 29cb9fa33..deaf18cbe 100644
  
  #include "audio/format.h"
  #include "audio/aframe.h"
-@@ -539,6 +541,62 @@ static void dump_graph(struct lavfi *c)
-     av_free(s);
+@@ -254,6 +256,113 @@ static void add_pads_direct(struct lavfi *c, int dir, AVFilterContext *f,
  }
  
+ // Parse the user-provided filter graph, and populate the unlinked filter pads.
 +// Process-wide Vulkan device for filter graphs that contain Vulkan filters
 +// (e.g. fruc_vulkan) when the VO cannot provide one. This is the case with
 +// the OpenGL render API (ANGLE) and hwdec=d3d11va-copy: frames arrive in
@@ -101,10 +108,103 @@ index 29cb9fa33..deaf18cbe 100644
 +    return ref;
 +}
 +
- // Initialize the graph if all inputs have formats set. If it's already
- // initialized, or can't be initialized yet, do nothing.
- static void init_graph(struct lavfi *c)
-@@ -549,6 +607,7 @@ static void init_graph(struct lavfi *c)
++// Returns the hwdec device the VO offers for this filter (or NULL).
++static struct mp_hwdec_ctx *lavfi_hwdec_ctx(struct lavfi *c)
++{
++    struct mp_stream_info *info = mp_filter_find_stream_info(c->f);
++    if (!info || !info->hwdec_devs)
++        return NULL;
++    if (c->hwdec_interop) {
++        int imgfmt = ra_hwdec_driver_get_imgfmt_for_name(c->hwdec_interop);
++        enum AVHWDeviceType device_type =
++            ra_hwdec_driver_get_device_type_for_name(c->hwdec_interop);
++        return mp_filter_load_hwdec_device(c->f, imgfmt, device_type);
++    }
++    return hwdec_devices_get_first(info->hwdec_devs);
++}
++
++// Give every filter of the graph a Vulkan device: the VO's if it is Vulkan,
++// otherwise our own. Must run before the filters are initialized, because
++// hwupload refuses to initialize without a device. Returns false if no
++// Vulkan device is available at all.
++static bool attach_vulkan_device(struct lavfi *c, bool log)
++{
++    struct mp_hwdec_ctx *hw = lavfi_hwdec_ctx(c);
++    enum AVHWDeviceType given = hw && hw->av_device_ref
++        ? ((AVHWDeviceContext *)hw->av_device_ref->data)->type
++        : AV_HWDEVICE_TYPE_NONE;
++    AVBufferRef *vk = NULL;
++    const char *desc = NULL;
++    if (given == AV_HWDEVICE_TYPE_VULKAN) {
++        vk = av_buffer_ref(hw->av_device_ref);
++    } else {
++        vk = get_own_vulkan_device(c, &desc);
++        if (vk && log && given == AV_HWDEVICE_TYPE_NONE) {
++            MP_INFO(c, "lavfi: no hwdec device, using own Vulkan device "
++                    "(%s)\n", desc);
++        } else if (vk && log) {
++            MP_INFO(c, "lavfi: hwdec device is %s, not Vulkan; using own "
++                    "Vulkan device (%s)\n",
++                    av_hwdevice_get_type_name(given), desc);
++        }
++    }
++    if (!vk)
++        return false;
++    for (unsigned n = 0; n < c->graph->nb_filters; n++) {
++        AVFilterContext *filter = c->graph->filters[n];
++        av_buffer_unref(&filter->hw_device_ctx);
++        filter->hw_device_ctx = av_buffer_ref(vk);
++    }
++    av_buffer_unref(&vk);
++    return true;
++}
++
+ static void precreate_graph(struct lavfi *c, bool first_init)
+ {
+     mp_assert(!c->graph);
+@@ -290,8 +399,40 @@ static void precreate_graph(struct lavfi *c, bool first_init)
+                         filter->nb_outputs, first_init);
+     } else {
+         AVFilterInOut *in = NULL, *out = NULL;
+-        if (avfilter_graph_parse2(c->graph, c->graph_string, &in, &out) < 0) {
++        // Same steps as avfilter_graph_parse2(), split so that Vulkan
++        // filters (and hwupload in front of them) get their device before
++        // they are initialized.
++        AVFilterGraphSegment *seg = NULL;
++        int r = avfilter_graph_segment_parse(c->graph, c->graph_string, 0, &seg);
++        if (r >= 0)
++            r = avfilter_graph_segment_create_filters(seg, 0);
++        if (r >= 0 && graph_needs_vulkan(c->graph) &&
++            !attach_vulkan_device(c, true))
++        {
++            // No Vulkan device at all: initializing would fail and take the
++            // whole video filter chain down with it. Pass frames through.
++            MP_ERR(c, "lavfi: no Vulkan device for '%s', passing frames "
++                   "through instead\n", c->graph_string);
++            avfilter_graph_segment_free(&seg);
++            avfilter_graph_free(&c->graph);
++            c->graph = avfilter_graph_alloc();
++            MP_HANDLE_OOM(c->graph);
++            mp_set_avopts(c->log, c->graph, c->graph_opts);
++            r = avfilter_graph_segment_parse(c->graph, "null", 0, &seg);
++            if (r >= 0)
++                r = avfilter_graph_segment_create_filters(seg, 0);
++        }
++        if (r >= 0)
++            r = avfilter_graph_segment_apply_opts(seg, 0);
++        if (r >= 0)
++            r = avfilter_graph_segment_init(seg, 0);
++        if (r >= 0)
++            r = avfilter_graph_segment_link(seg, 0, &in, &out);
++        avfilter_graph_segment_free(&seg);
++        if (r < 0) {
+             MP_FATAL(c, "parsing the filter graph failed\n");
++            avfilter_inout_free(&in);
++            avfilter_inout_free(&out);
+             goto error;
+         }
+         add_pads(c, MP_PIN_IN, in, first_init);
+@@ -549,6 +690,7 @@ static void init_graph(struct lavfi *c)
          precreate_graph(c, false);
  
      if (init_pads(c)) {
@@ -112,40 +212,29 @@ index 29cb9fa33..deaf18cbe 100644
          struct mp_stream_info *info = mp_filter_find_stream_info(c->f);
          if (info && info->hwdec_devs) {
              struct mp_hwdec_ctx *hwdec_ctx = NULL;
-@@ -569,6 +628,33 @@ static void init_graph(struct lavfi *c)
+@@ -566,12 +708,22 @@ static void init_graph(struct lavfi *c)
+                            hwdec_ctx->driver_name, c->graph_string);
+                 for (int n = 0; n < c->graph->nb_filters; n++) {
+                     AVFilterContext *filter = c->graph->filters[n];
++                    av_buffer_unref(&filter->hw_device_ctx);
                      filter->hw_device_ctx =
                          av_buffer_ref(hwdec_ctx->av_device_ref);
                  }
 +                given_type = ((AVHWDeviceContext *)
 +                              hwdec_ctx->av_device_ref->data)->type;
-+            }
-+        }
-+
-+        // Vulkan filters need a Vulkan device. Without one they fail to
-+        // configure; with our own device the rest of the chain is unchanged.
-+        if (given_type != AV_HWDEVICE_TYPE_VULKAN &&
-+            graph_needs_vulkan(c->graph))
-+        {
-+            const char *desc = NULL;
-+            AVBufferRef *vk = get_own_vulkan_device(c, &desc);
-+            if (vk) {
-+                if (given_type == AV_HWDEVICE_TYPE_NONE) {
-+                    MP_INFO(c, "lavfi: no hwdec device, using own Vulkan "
-+                            "device (%s)\n", desc);
-+                } else {
-+                    MP_INFO(c, "lavfi: hwdec device is %s, not Vulkan; using "
-+                            "own Vulkan device (%s)\n",
-+                            av_hwdevice_get_type_name(given_type), desc);
-+                }
-+                for (int n = 0; n < c->graph->nb_filters; n++) {
-+                    AVFilterContext *filter = c->graph->filters[n];
-+                    av_buffer_unref(&filter->hw_device_ctx);
-+                    filter->hw_device_ctx = av_buffer_ref(vk);
-+                }
-+                av_buffer_unref(&vk);
              }
          }
  
++        // Vulkan filters keep the Vulkan device they got in precreate_graph()
++        // (hwupload needs it already at init); the block above replaced it
++        // with the non-Vulkan hwdec device, so put it back.
++        if (given_type != AV_HWDEVICE_TYPE_VULKAN &&
++            graph_needs_vulkan(c->graph))
++            attach_vulkan_device(c, false);
++
+         // And here the actual libavfilter initialization happens.
+         if (avfilter_graph_config(c->graph, NULL) < 0) {
+             MP_FATAL(c, "failed to configure the filter graph\n");
 -- 
 2.53.0.windows.3
 
