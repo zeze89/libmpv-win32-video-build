@@ -3,7 +3,9 @@ ExternalProject_Add(xz
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
-    GIT_RESET 3d078b52adbff566ccfc51067dfbf742ecf3ef86 # v5.8.2
+    # win-v6-pin: 3d078b5 artik hicbir dalda degil, kismi klonda SHA ile
+    # getirilemiyor ("not our ref"); ayni commit etiketle alinir.
+    GIT_TAG v5.8.2 # = 3d078b52adbff566ccfc51067dfbf742ecf3ef86
     CONFIGURE_COMMAND ${EXEC} CONF=1 autoreconf -fi && <SOURCE_DIR>/configure
         --host=${TARGET_ARCH}
         --prefix=${MINGW_INSTALL_PREFIX}
