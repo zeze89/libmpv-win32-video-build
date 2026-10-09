@@ -7,7 +7,6 @@ ExternalProject_Add(ngtcp2
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !tests"
     GIT_SUBMODULES ""
     GIT_TAG 3c23148ef32596cb75720b94615d9650cdec5391  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
-    GIT_REMOTE_NAME origin
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} ${CMAKE_COMMAND} -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja

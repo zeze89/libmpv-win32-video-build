@@ -2,7 +2,6 @@ ExternalProject_Add(aom
     GIT_REPOSITORY https://aomedia.googlesource.com/aom
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
-    GIT_REMOTE_NAME origin
     GIT_TAG f9a09995618828dba5a3f154f30d60779e4acd33  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>

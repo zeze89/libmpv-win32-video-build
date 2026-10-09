@@ -4,7 +4,6 @@ ExternalProject_Add(vulkan
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
-    GIT_REMOTE_NAME origin
     GIT_TAG 320c4e0d66149b1c37e526c9bb14ef6525ef5aaf  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja

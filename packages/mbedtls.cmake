@@ -5,7 +5,7 @@ ExternalProject_Add(mbedtls
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/mbedtls-*.patch
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG 0bebf8b8c7f07abe3571ded48a11aa907a1ffb20  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) master
+    GIT_TAG master
     GIT_RESET 1ec69067fa1351427f904362c1221b31538c8b57 # v3.5.0
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja

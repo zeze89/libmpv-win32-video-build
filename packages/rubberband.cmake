@@ -4,7 +4,6 @@ ExternalProject_Add(rubberband
     GIT_REPOSITORY https://github.com/breakfastquay/rubberband.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
-    GIT_REMOTE_NAME origin
     GIT_TAG e4296ac80b1170018a110bc326fd0d45a0eb27d6  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) default
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>

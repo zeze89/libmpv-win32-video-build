@@ -7,7 +7,6 @@ ExternalProject_Add(libsdl2
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !test"
     UPDATE_COMMAND ""
-    GIT_REMOTE_NAME origin
     GIT_TAG b90ac95029d801c5abc59472ba8e2200dff31e1e  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) SDL2
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja
