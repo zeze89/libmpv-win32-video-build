@@ -9,6 +9,7 @@ endif()
 
 ExternalProject_Add(x265
     GIT_REPOSITORY https://github.com/Multicorewareinc/x265.git
+    GIT_TAG 116b87573ed0cec20b75ccacd5641bf06f6e57bd  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

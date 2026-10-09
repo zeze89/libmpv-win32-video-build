@@ -1,5 +1,6 @@
 ExternalProject_Add(svtav1
     GIT_REPOSITORY https://gitlab.com/AOMediaCodec/SVT-AV1.git
+    GIT_TAG c905d9aa201a1d805fde2f715416f5ce81727f9b  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

@@ -1,6 +1,7 @@
 ExternalProject_Add(libdvdnav
     DEPENDS libdvdread
     GIT_REPOSITORY https://code.videolan.org/videolan/libdvdnav.git
+    GIT_TAG 8147ccd35e5aae4afdd21171cf7b6b4d8f179d28  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

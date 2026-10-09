@@ -1,5 +1,6 @@
 ExternalProject_Add(ogg
     GIT_REPOSITORY https://github.com/xiph/ogg.git
+    GIT_TAG 06a5e0262cdc28aa4ae6797627a783b5010440f0  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

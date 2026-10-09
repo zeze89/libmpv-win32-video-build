@@ -1,8 +1,8 @@
 ExternalProject_Add(c-ares
     GIT_REPOSITORY https://github.com/c-ares/c-ares.git
     SOURCE_DIR ${SOURCE_LOCATION}
-    GIT_CLONE_FLAGS "--depth=1 --filter=tree:0"
-    GIT_TAG main
+    GIT_CLONE_FLAGS "--filter=tree:0"
+    GIT_TAG 5b181482e5b6d1dc04d1e899dd2c3a9f5695ce62  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     GIT_REMOTE_NAME origin
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} ${CMAKE_COMMAND} -H<SOURCE_DIR> -B<BINARY_DIR>

@@ -1,5 +1,6 @@
 ExternalProject_Add(libunibreak
     GIT_REPOSITORY https://github.com/adah1972/libunibreak.git
+    GIT_TAG 28a2756b864c343f438cd22537d49d394d4666a5  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

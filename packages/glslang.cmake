@@ -4,7 +4,7 @@ ExternalProject_Add(glslang
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !Test"
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG 5494791363451eb51b959544728c8d204b567fd2  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""

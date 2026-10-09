@@ -3,6 +3,7 @@ ExternalProject_Add(libssh
         zlib
         openssl
     GIT_REPOSITORY https://gitlab.com/libssh/libssh-mirror.git
+    GIT_TAG 57b72f31a7cd017a061c6442351898a66101d64b  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

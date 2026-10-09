@@ -7,6 +7,7 @@ done")
 
 ExternalProject_Add(lame
     GIT_REPOSITORY https://gitlab.com/shinchiro/lame.git
+    GIT_TAG 9a5b35c430a2e6d150d65a96c7d7acdd64962a8f  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

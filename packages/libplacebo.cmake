@@ -10,6 +10,7 @@ ExternalProject_Add(libplacebo
         fast_float
         xxhash
     GIT_REPOSITORY https://github.com/haasn/libplacebo.git
+    GIT_TAG e2972fdd09adacd383656738d7d280f0cd84a761  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_SUBMODULES ""

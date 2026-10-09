@@ -3,7 +3,7 @@ ExternalProject_Add(libvpx
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG 5e680f30801d03c21078f8c4b772464752516211  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} CONF=1 CROSS=${TARGET_ARCH}- <SOURCE_DIR>/configure
         --extra-cflags='-fno-asynchronous-unwind-tables'

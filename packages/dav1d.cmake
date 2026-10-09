@@ -2,6 +2,7 @@ ExternalProject_Add(dav1d
     DEPENDS
         xxhash
     GIT_REPOSITORY https://code.videolan.org/videolan/dav1d.git
+    GIT_TAG c2e9c9e58ac91b75ed58ec5132eb9f35c8fbb40d  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

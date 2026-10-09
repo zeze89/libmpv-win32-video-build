@@ -1,5 +1,6 @@
 ExternalProject_Add(bzip2
     GIT_REPOSITORY https://gitlab.com/bzip2/bzip2.git
+    GIT_TAG 66c46b8c9436613fd81bc5d03f63a61933a4dcc3  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

@@ -1,5 +1,6 @@
 ExternalProject_Add(libbs2b
     GIT_REPOSITORY https://github.com/alexmarsev/libbs2b.git
+    GIT_TAG 5ca2d59888df047f1e4b028e3a2fd5be8b5a7277  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/libbs2b-*.patch

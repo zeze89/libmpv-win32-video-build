@@ -9,7 +9,7 @@ ExternalProject_Add(vapoursynth
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /include !include/cython"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG master
+    GIT_TAG 9e0ef0fb7b20c214ac519df671f020139a1ace06  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) master
     GIT_RESET e46204429041e95a881b61eedddd46c08f9a307c # 72
     PATCH_COMMAND ""
     CONFIGURE_COMMAND ""

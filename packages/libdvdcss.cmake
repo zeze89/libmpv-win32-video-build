@@ -1,5 +1,6 @@
 ExternalProject_Add(libdvdcss
     GIT_REPOSITORY https://code.videolan.org/videolan/libdvdcss.git
+    GIT_TAG 811ce97a1d4d1c9d936f4b2707f533a9ef768251  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

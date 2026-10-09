@@ -11,7 +11,7 @@ ExternalProject_Add(libjxl
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG b87738951c1254cd8cccaa6d47712ba735da56d8  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     GIT_SUBMODULES ""
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""

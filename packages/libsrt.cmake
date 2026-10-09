@@ -2,6 +2,7 @@ ExternalProject_Add(libsrt
     DEPENDS
         openssl
     GIT_REPOSITORY https://github.com/Haivision/srt.git
+    GIT_TAG ff8ab25c57aece5b7351defe36dacc94fc28527f  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

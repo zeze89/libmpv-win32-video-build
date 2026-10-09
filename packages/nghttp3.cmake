@@ -1,10 +1,10 @@
 ExternalProject_Add(nghttp3
     GIT_REPOSITORY https://github.com/ngtcp2/nghttp3.git
     SOURCE_DIR ${SOURCE_LOCATION}
-    GIT_CLONE_FLAGS "--depth=1 --sparse --filter=tree:0"
+    GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !tests"
     GIT_SUBMODULES lib/sfparse
-    GIT_TAG main
+    GIT_TAG 2304973e5a0c8b1fa4bb380b47945a000357f87f  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     GIT_REMOTE_NAME origin
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} ${CMAKE_COMMAND} -H<SOURCE_DIR> -B<BINARY_DIR>

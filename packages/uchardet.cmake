@@ -1,5 +1,6 @@
 ExternalProject_Add(uchardet
     GIT_REPOSITORY https://gitlab.freedesktop.org/uchardet/uchardet.git
+    GIT_TAG 06029ec3340cdf6bf9a6a537dafb3f39eda0560e  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

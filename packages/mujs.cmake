@@ -9,6 +9,7 @@ host=mingw")
 
 ExternalProject_Add(mujs
     GIT_REPOSITORY https://codeberg.org/ccxvii/mujs.git
+    GIT_TAG 8a32c397b28fe45747ac4e9e4f3dca049825eda7  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/mujs-*.patch

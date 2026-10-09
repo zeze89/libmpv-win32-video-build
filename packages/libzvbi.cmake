@@ -6,7 +6,7 @@ ExternalProject_Add(libzvbi
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG d3a5ee9f2b047bf16cd1ee5ccf6ec05ee75409d0  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ${EXEC} <SOURCE_DIR>/autogen.sh && CONF=1 <SOURCE_DIR>/configure
         --host=${TARGET_ARCH}

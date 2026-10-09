@@ -4,6 +4,7 @@ ExternalProject_Add(freetype2
         zlib
         brotli
     GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG 032c3c5c80a8fc2aad8258a13526dfcbcc0d8dce  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_SUBMODULES ""

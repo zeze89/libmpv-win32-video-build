@@ -16,6 +16,7 @@ done")
 
 ExternalProject_Add(mpv-packaging
     GIT_REPOSITORY https://github.com/shinchiro/mpv-packaging.git
+    GIT_TAG 1c534ce8c21fab0be2a394ad73decc15e015693e  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

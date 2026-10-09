@@ -2,6 +2,7 @@ ExternalProject_Add(speex
     DEPENDS
         ogg 
     GIT_REPOSITORY https://github.com/xiph/speex.git
+    GIT_TAG 05895229896dc942d453446eba6f9f5ddcf95422  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

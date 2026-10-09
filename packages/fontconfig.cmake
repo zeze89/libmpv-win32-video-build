@@ -8,7 +8,7 @@ ExternalProject_Add(fontconfig
     SOURCE_DIR ${SOURCE_LOCATION}
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG bd8f7b597de96761750d0365abb49b19d2f8d5c3  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     GIT_CLONE_FLAGS "--filter=tree:0"
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/fontconfig-*.patch
     CONFIGURE_COMMAND ""

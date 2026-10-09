@@ -4,6 +4,7 @@ ExternalProject_Add(libaribcaption
         freetype2
         openssl
     GIT_REPOSITORY https://github.com/xqq/libaribcaption.git
+    GIT_TAG c64c23b8905ba514b87c9789269e9f66f949ffe0  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

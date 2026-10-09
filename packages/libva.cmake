@@ -1,5 +1,6 @@
 ExternalProject_Add(libva
     GIT_REPOSITORY https://github.com/intel/libva.git
+    GIT_TAG 6b07f7100512817f736967e899b8c26313c20623  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     PATCH_COMMAND ${EXEC} sed -i "s/shared_library/library/g" va/meson.build

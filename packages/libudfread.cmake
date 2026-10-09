@@ -1,5 +1,6 @@
 ExternalProject_Add(libudfread
     GIT_REPOSITORY https://code.videolan.org/videolan/libudfread.git
+    GIT_TAG b0bc6957e7e07d5f35391f210596d9eb71cffdd9  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

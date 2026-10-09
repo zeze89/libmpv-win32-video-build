@@ -3,6 +3,7 @@ ExternalProject_Add(lcms2
         libjpeg
         zlib
     GIT_REPOSITORY https://github.com/mm2/Little-CMS.git
+    GIT_TAG 67f272c87c31a8073b2f3cdc823ed15ae32e8820  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

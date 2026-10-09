@@ -1,5 +1,6 @@
 ExternalProject_Add(brotli
     GIT_REPOSITORY https://github.com/google/brotli.git
+    GIT_TAG a3abcbee0d945e51dddeec81e647ffe0cde182c2  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !tests !js !java !research"

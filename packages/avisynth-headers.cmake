@@ -1,5 +1,6 @@
 ExternalProject_Add(avisynth-headers
     GIT_REPOSITORY https://github.com/AviSynth/AviSynthPlus.git
+    GIT_TAG 5c82777b374bdef16e13007a11e77d735ac1e4eb  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !distrib"

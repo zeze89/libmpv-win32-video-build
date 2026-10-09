@@ -7,7 +7,7 @@ ExternalProject_Add(subrandr
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_REMOTE_NAME origin
-    GIT_TAG master
+    GIT_TAG c360780592e96c8fd3d7308cd829e1d81ded7707  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) master
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     CONFIGURE_COMMAND ""

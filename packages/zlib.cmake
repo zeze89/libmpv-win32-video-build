@@ -4,7 +4,7 @@ ExternalProject_Add(zlib
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
-    GIT_TAG develop
+    GIT_TAG 9e60980ebc7d3a65d262b4e77178e9057ad70e76  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) develop
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR> -B<BINARY_DIR>
         -G Ninja
         -DCMAKE_BUILD_TYPE=Release

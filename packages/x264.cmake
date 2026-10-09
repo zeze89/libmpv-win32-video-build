@@ -1,5 +1,6 @@
 ExternalProject_Add(x264
     GIT_REPOSITORY https://code.videolan.org/videolan/x264.git
+    GIT_TAG 0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

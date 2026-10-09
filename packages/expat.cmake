@@ -1,5 +1,6 @@
 ExternalProject_Add(expat
     GIT_REPOSITORY https://github.com/libexpat/libexpat.git
+    GIT_TAG 7ca33233bf4c894c2f623edf8c271a8740e82ffd  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !testdata"

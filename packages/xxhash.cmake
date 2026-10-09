@@ -2,7 +2,7 @@ ExternalProject_Add(xxhash
     GIT_REPOSITORY https://github.com/Cyan4973/xxHash.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
-    GIT_TAG dev
+    GIT_TAG 680bf463fa1ca0461b9a7c2dab7556e1f54cf4cf  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) dev
     UPDATE_COMMAND ""
     GIT_REMOTE_NAME origin
     CONFIGURE_COMMAND ${EXEC} CONF=1 cmake -H<SOURCE_DIR>/build/cmake -B<BINARY_DIR>

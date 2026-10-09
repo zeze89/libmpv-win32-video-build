@@ -3,7 +3,7 @@ ExternalProject_Add(libmysofa
     GIT_REPOSITORY https://github.com/hoene/libmysofa.git
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_REMOTE_NAME origin
-    GIT_TAG main
+    GIT_TAG 648eed03472e6720a1ea45d1a1f86c4efb569ff9  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) main
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !tests"
     UPDATE_COMMAND ""

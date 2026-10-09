@@ -1,6 +1,7 @@
 ExternalProject_Add(libpng
     DEPENDS zlib
     GIT_REPOSITORY https://github.com/glennrp/libpng.git
+    GIT_TAG 964b4135949703b705fc760fc3fb546b86e5ab47  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""

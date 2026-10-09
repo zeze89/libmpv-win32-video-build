@@ -4,6 +4,7 @@ ExternalProject_Add(libbluray
         freetype2
         libxml2
     GIT_REPOSITORY https://code.videolan.org/videolan/libbluray.git
+    GIT_TAG a24f4fad4d62893de647abc8671397747b2359dd  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_SUBMODULES ""

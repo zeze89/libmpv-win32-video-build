@@ -3,6 +3,7 @@ ExternalProject_Add(libxml2
         zlib
         libiconv
     GIT_REPOSITORY https://github.com/GNOME/libxml2.git
+    GIT_TAG 91586dc6742ab335682235120363f6e126eea5e2  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--sparse --filter=tree:0"
     GIT_CLONE_POST_COMMAND "sparse-checkout set --no-cone /* !result !test"

@@ -33,7 +33,7 @@ ExternalProject_Add(luajit
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     GIT_REMOTE_NAME origin
-    GIT_TAG v2.1-agentzh
+    GIT_TAG f75bf45e8b869a8ee4562ab0183322c3ebf2d9f3  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) v2.1-agentzh
     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/luajit-*.patch
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""

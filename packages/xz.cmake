@@ -1,5 +1,6 @@
 ExternalProject_Add(xz
     GIT_REPOSITORY https://github.com/tukaani-project/xz.git
+    GIT_TAG 3b1efb04d17c3a9ef7f473d73af13f1531428ffe  # win-v6-pin: win-v5 yayin derlemesi (run 35667606953, 2026-09-21 23:28 UTC) varsayilan dal
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_CLONE_FLAGS "--filter=tree:0"
     UPDATE_COMMAND ""
