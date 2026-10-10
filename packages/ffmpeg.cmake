@@ -307,6 +307,10 @@ ExternalProject_Add(ffmpeg
         # mpdecimate_filter_deps="gpl", bizim derleme --disable-gpl.
         --enable-filter=select
         --enable-filter=decimate
+        # fps: decimate girisin sabit kare hizini ister; kap bildirmeyince (MKV) mpv
+        # bilinmeyen hiz verir ve decimate "Failed to configure output pad" ile
+        # kurulamaz (2026-10-10 olculdu). fps=50,decimate=cycle=2 boyle calisir. LGPL.
+        --enable-filter=fps
         # LGPL KARSILIKLAR (2026-10-10): GPL filtrelerin yerine, uygulamada
         # kendiliginden acilmaz; olculup ayara baglanir.
         #  deblock    : blok azaltma (pp/spp/fspp/uspp/pp7 GPL)
