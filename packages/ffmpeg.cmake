@@ -307,6 +307,16 @@ ExternalProject_Add(ffmpeg
         # mpdecimate_filter_deps="gpl", bizim derleme --disable-gpl.
         --enable-filter=select
         --enable-filter=decimate
+        # LGPL KARSILIKLAR (2026-10-10): GPL filtrelerin yerine, uygulamada
+        # kendiliginden acilmaz; olculup ayara baglanir.
+        #  deblock    : blok azaltma (pp/spp/fspp/uspp/pp7 GPL)
+        #  estdif     : kenar yonlu ayristirici (nnedi/kerndeint/mcdeint GPL)
+        #  fieldmatch : ters telesine, decimate ile (pullup GPL)
+        #  fftdnoiz   : FFT gurultu azaltma (hqdn3d/owdenoise/vaguedenoiser GPL)
+        --enable-filter=deblock
+        --enable-filter=estdif
+        --enable-filter=fieldmatch
+        --enable-filter=fftdnoiz
         # SES FILTRELERI: iki ayar bunlar olmadan olu kaliyor.
         #  - "Akilli ses > Gece" af=lavfi=[dynaudnorm=...] yaziyor,
         #    mpv "No such filter: 'dynaudnorm'" deyip grafigi kuramiyor.
