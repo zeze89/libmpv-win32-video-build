@@ -26,6 +26,11 @@ ExternalProject_Add(ffmpeg
     SOURCE_DIR ${SOURCE_LOCATION}
     GIT_TAG 705286a8a7a8f9118465b2bd83f99a6f066dcbbc  # win-v4: FFmpeg master 705286a (upstream tarifin yamalari master icin)
     UPDATE_COMMAND ""
+    # Nightmare TV (2026-10-10): kendi ara kare filtremiz (nmfruc) FFmpeg yamasi
+    # olarak uygulanir. Onbellekteki kaynak bir onceki kosunun yamasini HEAD
+    # olarak tasiyabilir; once pine don, sonra yamayi uygula (mpv.cmake ile ayni).
+    PATCH_COMMAND ${EXEC} git reset --hard -q 705286a8a7a8f9118465b2bd83f99a6f066dcbbc
+          COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-*.patch
     CONFIGURE_COMMAND ${EXEC} CONF=1 <SOURCE_DIR>/configure
         --cross-prefix=${TARGET_ARCH}-
         --prefix=${MINGW_INSTALL_PREFIX}
@@ -328,6 +333,12 @@ ExternalProject_Add(ffmpeg
         --enable-filter=estdif
         --enable-filter=fieldmatch
         --enable-filter=fftdnoiz
+        # nmfruc (2026-10-10, Nightmare TV): kendi hareket telafili ara kare
+        # filtremiz. Hareket NVIDIA optik akis donanimindan (nvofapi64.dll,
+        # surucuyle gelir, calisma aninda yuklenir), sentez ve korumalar bizim
+        # D3D11 compute golgelendiricilerimiz. Kaynak bizim (LGPL 2.1+), NVOF
+        # basliklari MIT. NVIDIA yoksa filtre kurulumda temizce duser.
+        --enable-filter=nmfruc
         # SES FILTRELERI: iki ayar bunlar olmadan olu kaliyor.
         #  - "Akilli ses > Gece" af=lavfi=[dynaudnorm=...] yaziyor,
         #    mpv "No such filter: 'dynaudnorm'" deyip grafigi kuramiyor.
