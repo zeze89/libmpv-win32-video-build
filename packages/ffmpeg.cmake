@@ -298,6 +298,15 @@ ExternalProject_Add(ffmpeg
         --enable-filter=atadenoise
         --enable-filter=unsharp
         --enable-filter=gradfun
+        # TEKRAR KARE AYIKLAMA (2026-10-10, Nightmare TV): 50 fps kapta 25 fps
+        # goruntu tasiyan yayinlarda tekrar kare sikistirma gurultusuyle farkli
+        # geliyor ve doku saniyede 25 kez kipirdiyor (sahip olcumu, dag ve yuz).
+        # select: sahne farki esigiyle tekrar kareyi atar (scene_sad'i configure
+        # kendisi secer). decimate: her N karede en benzerini atar (cycle=2).
+        # Ikisi de LGPL 2.1+. mpdecimate BILEREK YOK: configure'da
+        # mpdecimate_filter_deps="gpl", bizim derleme --disable-gpl.
+        --enable-filter=select
+        --enable-filter=decimate
         # SES FILTRELERI: iki ayar bunlar olmadan olu kaliyor.
         #  - "Akilli ses > Gece" af=lavfi=[dynaudnorm=...] yaziyor,
         #    mpv "No such filter: 'dynaudnorm'" deyip grafigi kuramiyor.
