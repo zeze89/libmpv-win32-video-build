@@ -265,6 +265,13 @@ ExternalProject_Add(ffmpeg
         # Ikisi de LGPL 2.1+, yani --disable-gpl / -Dgpl=false duruşu bozulmaz.
         --enable-filter=yadif
         --enable-filter=bwdif
+        # idet (2026-10-10, Nightmare TV): bu saglayicida 1080/25 kanallarin cogu
+        # aslinda ilerlemeli ya da PsF (kayitlarda olculdu: Show TV 4K 400/400,
+        # ATV 4K 395/400 ilerlemeli); ayristirici hepsini ikiye bolup netligi
+        # dusuruyor ve pirildatiyor. idet her kareyi olcup taramali bayragini ve
+        # alan sirasini KARENIN USTUNE yaziyor; arkasindaki bwdif deint=interlaced
+        # yalniz gercekten taramali kareleri ayristiriyor. LGPL 2.1+.
+        --enable-filter=idet
         # ALTYAPI FILTRELERI — BUNLAR OLMADAN YUKARIDAKI IKISI CALISMAZ.
         #
         # 2026-08-23te olculdu, 2026-09-21de AYNI ARIZA GERI GELDI.
