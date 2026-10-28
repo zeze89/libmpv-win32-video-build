@@ -84,7 +84,9 @@ jobs:
           missing=""
           for f in scale format null copy setpts aformat aresample \
                    anull asetpts atadenoise unsharp gradfun \
-                   dynaudnorm loudnorm; do
+                   dynaudnorm loudnorm \
+                   astats ebur128 silencedetect freezedetect \
+                   dialoguenhance speechnorm bbox; do
             grep -q -- "--enable-filter=$f\b" packages/ffmpeg.cmake \
               || missing="$missing $f"
           done
@@ -95,7 +97,9 @@ jobs:
             echo "deinterlacer outright. Restore the block before building."
             exit 1
           fi
-          echo "filter whitelist: all 14 present"
+          grep -q -- "--enable-decoder=ccaption" packages/ffmpeg.cmake \
+            || { echo "packages/ffmpeg.cmake is missing decoder ccaption"; exit 1; }
+          echo "filter whitelist: all 21 present, ccaption decoder present"
 
       - name: Loading clang sysroot cache
         uses: actions/cache/restore@main

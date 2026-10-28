@@ -168,6 +168,10 @@ ExternalProject_Add(ffmpeg
         --enable-decoder=vplayer
         --enable-decoder=webvtt
         --enable-decoder=movtext
+        # MOTOR PAKETI (2026-10-29): EIA-608/708 kapali altyazi. Configure adi
+        # ccaption (codec adi cc_dec; "--enable-decoder=cc_dec" hicbir seyle
+        # eslesmez, configure yalniz uyarir). mpv sub-cc izi bunu ister. LGPL.
+        --enable-decoder=ccaption
 
         --enable-decoder=mjpeg
         --enable-decoder=ljpeg
@@ -336,6 +340,24 @@ ExternalProject_Add(ffmpeg
         # Ikisi de LGPL 2.1+ (af_dynaudnorm.c / af_loudnorm.c kontrol edildi).
         --enable-filter=dynaudnorm
         --enable-filter=loudnorm
+        # MOTOR PAKETI (2026-10-29, sahip onayi): olcum ve ses filtreleri.
+        #  astats         : ses istatistigi (kayitta otomatik an, yer imi)
+        #  ebur128        : LUFS olcumu (Ses Hafizasi)
+        #  silencedetect  : sessizlik sinirlari (altyazi hizalama, sessiz yayin)
+        #  freezedetect   : donuk kare bekcisi (scene_sad'i configure secer)
+        #  dialoguenhance : stereodan konusma merkezi
+        #  speechnorm     : konusma seviyeleme
+        #  bbox           : siyah kenar olcumu. cropdetect BILEREK YOK:
+        #                   configure'da cropdetect_filter_deps="gpl",
+        #                   bizim derleme --disable-gpl; bbox LGPL karsiligi.
+        # Hepsi LGPL 2.1+ (kaynak basliklari 705286a'da kontrol edildi).
+        --enable-filter=astats
+        --enable-filter=ebur128
+        --enable-filter=silencedetect
+        --enable-filter=freezedetect
+        --enable-filter=dialoguenhance
+        --enable-filter=speechnorm
+        --enable-filter=bbox
         # Muxer: stok derleme --disable-muxers ve tek bir --enable-muxer= yok.
         # spdif olmadan `audio-spdif` (Ses Passthrough) ses aygitini HIC
         # acmiyor ve oynatma sessizce donuyor. mpegts/matroska olmadan
