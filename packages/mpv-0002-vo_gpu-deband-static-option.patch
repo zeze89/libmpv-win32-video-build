@@ -1,0 +1,75 @@
+From 1f3aa0c5b902f0bf616b273b9a38d88042199ec3 Mon Sep 17 00:00:00 2001
+From: zeze89 <zz89842015@gmail.com>
+Date: Sun, 8 Nov 2026 19:49:55 +0300
+Subject: [PATCH] vo_gpu: deband-static option for a temporally stable deband
+ pattern
+
+The deband shader seeds its per-pixel PRNG with a uniform drawn from the
+renderer's LFG, which advances on every rendered frame. Flat, low-gradient
+areas (skin, sky) therefore get a new sampling pattern each frame and
+shimmer at the frame rate, more visibly with several iterations.
+
+deband-static=yes uses a constant seed so the pattern stays fixed in screen
+space. Default off: behaviour is unchanged unless the option is set.
+---
+ video/out/gpu/video_shaders.c | 10 +++++++---
+ video/out/gpu/video_shaders.h |  1 +
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/video/out/gpu/video_shaders.c b/video/out/gpu/video_shaders.c
+index 904289b..b45557a 100644
+--- a/video/out/gpu/video_shaders.c
++++ b/video/out/gpu/video_shaders.c
+@@ -929,7 +929,7 @@ void pass_color_map(struct gl_shader_cache *sc, bool is_linear,
+ // update the state. Assumes the texture was hooked.
+ // permute() was modified from the original to avoid "large" numbers in
+ // calculations, since low-end mobile GPUs choke on them (overflow).
+-static void prng_init(struct gl_shader_cache *sc, AVLFG *lfg)
++static void prng_init(struct gl_shader_cache *sc, AVLFG *lfg, bool fixed)
+ {
+     GLSLH(float mod289(float x)  { return x - floor(x * 1.0/289.0) * 289.0; })
+     GLSLHF("float permute(float x) {\n");
+@@ -941,7 +941,10 @@ static void prng_init(struct gl_shader_cache *sc, AVLFG *lfg)
+     GLSL(vec3 _m = vec3(HOOKED_pos, random) + vec3(1.0);)
+     GLSL(float h = permute(permute(permute(_m.x)+_m.y)+_m.z);)
+     gl_sc_uniform_dynamic(sc);
+-    gl_sc_uniform_f(sc, "random", (double)av_lfg_get(lfg) / UINT32_MAX);
++    // deband-static: a constant seed keeps the sampling pattern identical
++    // from frame to frame, so flat areas do not shimmer at the frame rate.
++    gl_sc_uniform_f(sc, "random",
++                    fixed ? 0.5 : (double)av_lfg_get(lfg) / UINT32_MAX);
+ }
+ 
+ const struct deband_opts deband_opts_def = {
+@@ -958,6 +961,7 @@ const struct m_sub_options deband_conf = {
+         {"threshold", OPT_FLOAT(threshold), M_RANGE(0.0, 4096.0)},
+         {"range", OPT_FLOAT(range), M_RANGE(1.0, 64.0)},
+         {"grain", OPT_FLOAT(grain), M_RANGE(0.0, 4096.0)},
++        {"static", OPT_BOOL(static_seed)},
+         {0}
+     },
+     .size = sizeof(struct deband_opts),
+@@ -970,7 +974,7 @@ void pass_sample_deband(struct gl_shader_cache *sc, struct deband_opts *opts,
+ {
+     // Initialize the PRNG
+     GLSLF("{\n");
+-    prng_init(sc, lfg);
++    prng_init(sc, lfg, opts->static_seed);
+ 
+     // Helper: Compute a stochastic approximation of the avg color around a
+     // pixel
+diff --git a/video/out/gpu/video_shaders.h b/video/out/gpu/video_shaders.h
+index caa50d2..092b20a 100644
+--- a/video/out/gpu/video_shaders.h
++++ b/video/out/gpu/video_shaders.h
+@@ -28,6 +28,7 @@ struct deband_opts {
+     float threshold;
+     float range;
+     float grain;
++    bool static_seed;
+ };
+ 
+ extern const struct deband_opts deband_opts_def;
+-- 
+2.53.0.windows.3
+
