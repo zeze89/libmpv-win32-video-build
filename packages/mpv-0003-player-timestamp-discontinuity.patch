@@ -1,8 +1,8 @@
-From efa626c34b532b8c9c8d6af1b9f18c1b20d0875b Mon Sep 17 00:00:00 2001
+From eef01cc1657fd06320141c777d02b80cae8e2a2a Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
-Date: Thu, 19 Nov 2026 18:28:59 +0300
+Date: Thu, 19 Nov 2026 21:02:25 +0300
 Subject: [PATCH] player: audio timestamp reset resyncs audio only, video is
- not flushed (r4)
+ not flushed (r5)
 
 On an audio timestamp reset do an audio-only resync (like an audio track
 switch) instead of a full playback reset: drop the audio still inside the
@@ -13,16 +13,19 @@ video waiting for each other.
 
 calculate_frame_duration: a jump >= the discontinuity tolerance of
 handle_new_frame() uses the nominal frame duration (WARN logged).
+
+r5: also reset the audio decoder; its pts_reset flag is only cleared by a
+decoder reset (r4 looped).
 ---
- player/audio.c | 20 ++++++++++++++++++--
+ player/audio.c | 24 ++++++++++++++++++++++--
  player/video.c | 20 ++++++++++++++++++++
- 2 files changed, 38 insertions(+), 2 deletions(-)
+ 2 files changed, 42 insertions(+), 2 deletions(-)
 
 diff --git a/player/audio.c b/player/audio.c
-index b3e975dd2e..54eac23fc1 100644
+index b3e975dd2e..4f2a3d61cf 100644
 --- a/player/audio.c
 +++ b/player/audio.c
-@@ -892,9 +892,25 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
+@@ -892,9 +892,29 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
      if (mpctx->vo_chain && ao_c->track && ao_c->track->dec &&
          mp_decoder_wrapper_get_pts_reset(ao_c->track->dec))
      {
@@ -39,6 +42,10 @@ index b3e975dd2e..54eac23fc1 100644
 +        // the video position, video keeps its own clock meanwhile).
 +        MP_WARN(mpctx, "Audio timestamp reset, resyncing audio to video "
 +                "(video continues).\n");
++        // The decoder keeps pts_reset set until the decoder itself is
++        // reset; reset it too (audio decoder only), otherwise this would
++        // trigger again on every iteration.
++        mp_filter_reset(ao_c->track->dec->f);
 +        mp_filter_reset(ao_c->filter->f);
 +        if (ao_c->queue_filter)
 +            mp_filter_reset(ao_c->queue_filter);
