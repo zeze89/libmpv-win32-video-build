@@ -1,8 +1,8 @@
-From 93a243f3e5ca36b269befc5008af89c12eeeec7f Mon Sep 17 00:00:00 2001
+From fc8440ccaf1798e4dbc1bcdc41f67991a17fb1dc Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
-Date: Thu, 19 Nov 2026 22:23:50 +0300
+Date: Thu, 19 Nov 2026 23:11:20 +0300
 Subject: [PATCH] player: let audio and video cross a timestamp discontinuity
- together (r7)
+ together (r8)
 
 On an audio timestamp reset do not reset playback. With lookahead filters
 (dynaudnorm) the decoder sees the jump seconds early; the full reset
@@ -10,7 +10,7 @@ flushed the video decoder mid-GOP (broken frames with hwdec) and could
 leave audio and video waiting for each other, and an audio-only resync
 that drops queued audio starved live streams (r6). Audio and video
 normally cross the discontinuity together. If they are still more than
-5 s apart 4 s later (audio-only jump) the old full reset is done.
+5 s apart from 4 s on and still 10 s after the jump (audio-only jump) the old full reset is done.
 
 mp_decoder_wrapper_get_pts_reset() consumes the flag.
 
@@ -18,10 +18,10 @@ calculate_frame_duration: a jump >= the discontinuity tolerance of
 handle_new_frame() uses the nominal frame duration (WARN logged).
 ---
  filters/f_decoder_wrapper.c |  1 +
- player/audio.c              | 30 +++++++++++++++++++++++++++---
+ player/audio.c              | 32 +++++++++++++++++++++++++++++---
  player/core.h               |  4 ++++
  player/video.c              | 20 ++++++++++++++++++++
- 4 files changed, 52 insertions(+), 3 deletions(-)
+ 4 files changed, 54 insertions(+), 3 deletions(-)
 
 diff --git a/filters/f_decoder_wrapper.c b/filters/f_decoder_wrapper.c
 index 5e2e8d74c0..8c746865e3 100644
@@ -36,7 +36,7 @@ index 5e2e8d74c0..8c746865e3 100644
      return res;
  }
 diff --git a/player/audio.c b/player/audio.c
-index b3e975dd2e..0f0579510d 100644
+index b3e975dd2e..484120416a 100644
 --- a/player/audio.c
 +++ b/player/audio.c
 @@ -224,6 +224,7 @@ static void ao_chain_reset_state(struct ao_chain *ao_c)
@@ -47,7 +47,7 @@ index b3e975dd2e..0f0579510d 100644
      ao_c->delaying_audio_start = false;
  }
  
-@@ -892,9 +893,32 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
+@@ -892,9 +893,34 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
      if (mpctx->vo_chain && ao_c->track && ao_c->track->dec &&
          mp_decoder_wrapper_get_pts_reset(ao_c->track->dec))
      {
@@ -61,7 +61,7 @@ index b3e975dd2e..0f0579510d 100644
 +        // hwdec) and could leave audio and video waiting for each other;
 +        // dropping queued audio instead starves live streams. Audio and
 +        // video normally cross the discontinuity together. Only if they
-+        // are still far apart a few seconds later (audio-only jump), fall
++        // are still far apart 10 seconds later (audio-only jump), fall
 +        // back to the full reset below.
 +        MP_WARN(mpctx, "Audio timestamp reset, letting audio and video "
 +                "cross it together.\n");
@@ -70,12 +70,14 @@ index b3e975dd2e..0f0579510d 100644
 +    }
 +
 +    if (ao_c->pts_reset_pending && mp_time_sec() - ao_c->pts_reset_time > 4) {
-+        ao_c->pts_reset_pending = false;
 +        double apts = playing_audio_pts(mpctx);
 +        double vpts = mpctx->video_pts;
-+        if (apts != MP_NOPTS_VALUE && vpts != MP_NOPTS_VALUE &&
-+            fabs(apts - vpts) > 5)
-+        {
++        bool apart = apts != MP_NOPTS_VALUE && vpts != MP_NOPTS_VALUE &&
++                     fabs(apts - vpts) > 5;
++        if (!apart) {
++            ao_c->pts_reset_pending = false; // crossed together
++        } else if (mp_time_sec() - ao_c->pts_reset_time > 10) {
++            ao_c->pts_reset_pending = false;
 +            MP_WARN(mpctx, "Reset playback due to audio timestamp reset.\n");
 +            reset_playback_state(mpctx);
 +            mp_wakeup_core(mpctx);
