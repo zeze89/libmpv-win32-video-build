@@ -1,69 +1,103 @@
-From d9ae327cec210c18e615276e0ab0292f5864f69d Mon Sep 17 00:00:00 2001
+From 93a243f3e5ca36b269befc5008af89c12eeeec7f Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
-Date: Thu, 19 Nov 2026 21:41:05 +0300
-Subject: [PATCH] player: audio timestamp reset resyncs the audio output only
- (r6)
+Date: Thu, 19 Nov 2026 22:23:50 +0300
+Subject: [PATCH] player: let audio and video cross a timestamp discontinuity
+ together (r7)
 
-On an audio timestamp reset resync only the audio output to video instead
-of a full playback reset; decoder, filters and video keep running. With
-lookahead filters (dynaudnorm) the decoder sees the jump seconds before
-video does; the full reset flushed the video decoder mid-GOP and could
-leave audio and video waiting for each other.
+On an audio timestamp reset do not reset playback. With lookahead filters
+(dynaudnorm) the decoder sees the jump seconds early; the full reset
+flushed the video decoder mid-GOP (broken frames with hwdec) and could
+leave audio and video waiting for each other, and an audio-only resync
+that drops queued audio starved live streams (r6). Audio and video
+normally cross the discontinuity together. If they are still more than
+5 s apart 4 s later (audio-only jump) the old full reset is done.
 
-mp_decoder_wrapper_get_pts_reset() now consumes the flag (its only caller
-no longer resets the decoder; r4 looped on it, r5's decoder and filter
-reset could stall audio after an AO format change).
+mp_decoder_wrapper_get_pts_reset() consumes the flag.
 
 calculate_frame_duration: a jump >= the discontinuity tolerance of
 handle_new_frame() uses the nominal frame duration (WARN logged).
 ---
  filters/f_decoder_wrapper.c |  1 +
- player/audio.c              | 18 ++++++++++++++++--
+ player/audio.c              | 30 +++++++++++++++++++++++++++---
+ player/core.h               |  4 ++++
  player/video.c              | 20 ++++++++++++++++++++
- 3 files changed, 37 insertions(+), 2 deletions(-)
+ 4 files changed, 52 insertions(+), 3 deletions(-)
 
 diff --git a/filters/f_decoder_wrapper.c b/filters/f_decoder_wrapper.c
-index 5e2e8d74c0..e0b6785c9b 100644
+index 5e2e8d74c0..8c746865e3 100644
 --- a/filters/f_decoder_wrapper.c
 +++ b/filters/f_decoder_wrapper.c
 @@ -540,6 +540,7 @@ bool mp_decoder_wrapper_get_pts_reset(struct mp_decoder_wrapper *d)
      struct priv *p = d->f->priv;
      mp_mutex_lock(&p->cache_lock);
      bool res = p->pts_reset;
-+    p->pts_reset = false; // consumed; audio.c no longer resets the decoder
++    p->pts_reset = false; // consumed (see player/audio.c)
      mp_mutex_unlock(&p->cache_lock);
      return res;
  }
 diff --git a/player/audio.c b/player/audio.c
-index b3e975dd2e..7b109d013a 100644
+index b3e975dd2e..0f0579510d 100644
 --- a/player/audio.c
 +++ b/player/audio.c
-@@ -892,9 +892,23 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
+@@ -224,6 +224,7 @@ static void ao_chain_reset_state(struct ao_chain *ao_c)
+     ao_c->start_pts = MP_NOPTS_VALUE;
+     ao_c->untimed_throttle = false;
+     ao_c->underrun = false;
++    ao_c->pts_reset_pending = false;
+     ao_c->delaying_audio_start = false;
+ }
+ 
+@@ -892,9 +893,32 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
      if (mpctx->vo_chain && ao_c->track && ao_c->track->dec &&
          mp_decoder_wrapper_get_pts_reset(ao_c->track->dec))
      {
 -        MP_WARN(mpctx, "Reset playback due to audio timestamp reset.\n");
 -        reset_playback_state(mpctx);
-+        // Resync only the audio output to video instead of a full playback
-+        // reset. The full reset flushed the video decoder too; with
-+        // lookahead audio filters (dynaudnorm, loudnorm) the decoder sees
-+        // the jump seconds before video does, so video was flushed in the
-+        // middle of a GOP (broken frames with hwdec) and audio and video
-+        // could wait for each other. Decoder and filters keep their data:
-+        // audio restarts at the video position and both cross the
-+        // discontinuity together; video keeps running meanwhile.
-+        MP_WARN(mpctx, "Audio timestamp reset, resyncing audio to video "
-+                "(video continues).\n");
-+        if (ao_c->queue_filter)
-+            mp_filter_reset(ao_c->queue_filter);
-+        if (mpctx->ao)
-+            ao_reset(mpctx->ao);
-+        reset_audio_state(mpctx);
-         mp_wakeup_core(mpctx);
-+        return;
+-        mp_wakeup_core(mpctx);
++        // Do not reset playback here. With lookahead audio filters
++        // (dynaudnorm, loudnorm) the decoder sees the jump seconds before it
++        // is played and before video reaches its own discontinuity. A full
++        // reset then flushed the video decoder mid-GOP (broken frames with
++        // hwdec) and could leave audio and video waiting for each other;
++        // dropping queued audio instead starves live streams. Audio and
++        // video normally cross the discontinuity together. Only if they
++        // are still far apart a few seconds later (audio-only jump), fall
++        // back to the full reset below.
++        MP_WARN(mpctx, "Audio timestamp reset, letting audio and video "
++                "cross it together.\n");
++        ao_c->pts_reset_pending = true;
++        ao_c->pts_reset_time = mp_time_sec();
++    }
++
++    if (ao_c->pts_reset_pending && mp_time_sec() - ao_c->pts_reset_time > 4) {
++        ao_c->pts_reset_pending = false;
++        double apts = playing_audio_pts(mpctx);
++        double vpts = mpctx->video_pts;
++        if (apts != MP_NOPTS_VALUE && vpts != MP_NOPTS_VALUE &&
++            fabs(apts - vpts) > 5)
++        {
++            MP_WARN(mpctx, "Reset playback due to audio timestamp reset.\n");
++            reset_playback_state(mpctx);
++            mp_wakeup_core(mpctx);
++        }
      }
  
      if (mpctx->audio_status == STATUS_SYNCING) {
+diff --git a/player/core.h b/player/core.h
+index eb7f508cab..cdc3a37a96 100644
+--- a/player/core.h
++++ b/player/core.h
+@@ -194,6 +194,10 @@ struct ao_chain {
+     bool out_eof;
+     double last_out_pts;
+ 
++    // Audio timestamp reset seen by the decoder (see fill_audio_out_buffers()).
++    bool pts_reset_pending;
++    double pts_reset_time;
++
+     double start_pts;
+     bool start_pts_known;
+ 
 diff --git a/player/video.c b/player/video.c
 index 0e1ac290d2..dd40f73d3c 100644
 --- a/player/video.c
