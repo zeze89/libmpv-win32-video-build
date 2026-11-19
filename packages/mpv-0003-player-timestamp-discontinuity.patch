@@ -1,52 +1,59 @@
-From eef01cc1657fd06320141c777d02b80cae8e2a2a Mon Sep 17 00:00:00 2001
+From d9ae327cec210c18e615276e0ab0292f5864f69d Mon Sep 17 00:00:00 2001
 From: zeze89 <zz89842015@gmail.com>
-Date: Thu, 19 Nov 2026 21:02:25 +0300
-Subject: [PATCH] player: audio timestamp reset resyncs audio only, video is
- not flushed (r5)
+Date: Thu, 19 Nov 2026 21:41:05 +0300
+Subject: [PATCH] player: audio timestamp reset resyncs the audio output only
+ (r6)
 
-On an audio timestamp reset do an audio-only resync (like an audio track
-switch) instead of a full playback reset: drop the audio still inside the
-filters and the AO, set audio to SYNCING, keep video running. With lookahead
-filters (dynaudnorm) the decoder sees the jump seconds before video does;
-the full reset flushed the video decoder mid-GOP and could leave audio and
-video waiting for each other.
+On an audio timestamp reset resync only the audio output to video instead
+of a full playback reset; decoder, filters and video keep running. With
+lookahead filters (dynaudnorm) the decoder sees the jump seconds before
+video does; the full reset flushed the video decoder mid-GOP and could
+leave audio and video waiting for each other.
+
+mp_decoder_wrapper_get_pts_reset() now consumes the flag (its only caller
+no longer resets the decoder; r4 looped on it, r5's decoder and filter
+reset could stall audio after an AO format change).
 
 calculate_frame_duration: a jump >= the discontinuity tolerance of
 handle_new_frame() uses the nominal frame duration (WARN logged).
-
-r5: also reset the audio decoder; its pts_reset flag is only cleared by a
-decoder reset (r4 looped).
 ---
- player/audio.c | 24 ++++++++++++++++++++++--
- player/video.c | 20 ++++++++++++++++++++
- 2 files changed, 42 insertions(+), 2 deletions(-)
+ filters/f_decoder_wrapper.c |  1 +
+ player/audio.c              | 18 ++++++++++++++++--
+ player/video.c              | 20 ++++++++++++++++++++
+ 3 files changed, 37 insertions(+), 2 deletions(-)
 
+diff --git a/filters/f_decoder_wrapper.c b/filters/f_decoder_wrapper.c
+index 5e2e8d74c0..e0b6785c9b 100644
+--- a/filters/f_decoder_wrapper.c
++++ b/filters/f_decoder_wrapper.c
+@@ -540,6 +540,7 @@ bool mp_decoder_wrapper_get_pts_reset(struct mp_decoder_wrapper *d)
+     struct priv *p = d->f->priv;
+     mp_mutex_lock(&p->cache_lock);
+     bool res = p->pts_reset;
++    p->pts_reset = false; // consumed; audio.c no longer resets the decoder
+     mp_mutex_unlock(&p->cache_lock);
+     return res;
+ }
 diff --git a/player/audio.c b/player/audio.c
-index b3e975dd2e..4f2a3d61cf 100644
+index b3e975dd2e..7b109d013a 100644
 --- a/player/audio.c
 +++ b/player/audio.c
-@@ -892,9 +892,29 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
+@@ -892,9 +892,23 @@ void fill_audio_out_buffers(struct MPContext *mpctx)
      if (mpctx->vo_chain && ao_c->track && ao_c->track->dec &&
          mp_decoder_wrapper_get_pts_reset(ao_c->track->dec))
      {
 -        MP_WARN(mpctx, "Reset playback due to audio timestamp reset.\n");
 -        reset_playback_state(mpctx);
-+        // Resync only the audio side, like an audio track switch. A full
-+        // playback reset would flush the video decoder too. With lookahead
-+        // audio filters (dynaudnorm, loudnorm) the decoder sees the jump
-+        // seconds before video reaches it, so the video decoder was flushed
-+        // in the middle of a GOP (broken frames with hwdec) and video and
-+        // audio could end up waiting for each other. Here the audio tail
-+        // still inside the filters is dropped, audio waits in SYNCING until
-+        // video crosses its own discontinuity (audio start is delayed to
-+        // the video position, video keeps its own clock meanwhile).
++        // Resync only the audio output to video instead of a full playback
++        // reset. The full reset flushed the video decoder too; with
++        // lookahead audio filters (dynaudnorm, loudnorm) the decoder sees
++        // the jump seconds before video does, so video was flushed in the
++        // middle of a GOP (broken frames with hwdec) and audio and video
++        // could wait for each other. Decoder and filters keep their data:
++        // audio restarts at the video position and both cross the
++        // discontinuity together; video keeps running meanwhile.
 +        MP_WARN(mpctx, "Audio timestamp reset, resyncing audio to video "
 +                "(video continues).\n");
-+        // The decoder keeps pts_reset set until the decoder itself is
-+        // reset; reset it too (audio decoder only), otherwise this would
-+        // trigger again on every iteration.
-+        mp_filter_reset(ao_c->track->dec->f);
-+        mp_filter_reset(ao_c->filter->f);
 +        if (ao_c->queue_filter)
 +            mp_filter_reset(ao_c->queue_filter);
 +        if (mpctx->ao)
